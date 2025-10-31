@@ -208,7 +208,7 @@ export function mountChat(containerSelector, options = {}){
     return candidates[0]; // fallback
   }
 
-  // apply resolved asset paths to elements (background + avatars)
+  // apply resolved asset paths to elements (background + avatars + chat box)
   (async function applyAssets(){
     const base = options.assetsPath || await resolveAssetsBase();
     // set background
@@ -217,6 +217,9 @@ export function mountChat(containerSelector, options = {}){
     // set avatars
     if(avatarLeft) avatarLeft.style.backgroundImage = `url('${base.replace(/\/$/,'')}/characters/robot.GIF')`;
     if(avatarRight) avatarRight.style.backgroundImage = `url('${base.replace(/\/$/,'')}/characters/duckFlip.GIF')`;
+    // set chat box background
+    const chatBox = container.querySelector('.chat-box');
+    if(chatBox) chatBox.style.backgroundImage = `url('${base.replace(/\/$/,'')}/textBox/textBox.png')`;
   })();
 
   async function typeLine(text){ 
@@ -322,28 +325,52 @@ export function mountChat(containerSelector, options = {}){
     tempContainer.style.fontFamily = '"Pixelify Sans", sans-serif';
     tempContainer.style.fontSize = '32px';
     tempContainer.style.fontWeight = '600';
-    tempContainer.style.wordWrap = 'break-word';
-    tempContainer.style.whiteSpace = 'normal';
-    tempContainer.style.width = '800px'; // Max width constraint
     document.body.appendChild(tempContainer);
     
     // Create each button with its own dynamic size based on its text
     choices.forEach((c, idx)=>{
       // Measure this specific button's text
+      // First, measure without width constraint to see natural single-line width
+      const tempTextUnconstrained = document.createElement('div');
+      tempTextUnconstrained.textContent = c.text;
+      tempTextUnconstrained.style.display = 'inline-block';
+      tempTextUnconstrained.style.whiteSpace = 'nowrap';
+      tempTextUnconstrained.style.fontFamily = '"Pixelify Sans", sans-serif';
+      tempTextUnconstrained.style.fontSize = '32px';
+      tempTextUnconstrained.style.fontWeight = '600';
+      tempContainer.appendChild(tempTextUnconstrained);
+      
+      const naturalWidth = tempTextUnconstrained.offsetWidth;
+      tempContainer.removeChild(tempTextUnconstrained);
+      
+      // Now measure with wrapping enabled (allowing multi-line)
       const tempText = document.createElement('div');
       tempText.textContent = c.text;
-      tempText.style.display = 'inline-block';
-      tempText.style.maxWidth = '800px';
+      tempText.style.display = 'block';
+      tempText.style.maxWidth = '1200px'; // Max width before wrapping
+      tempText.style.width = 'auto';
+      tempText.style.wordWrap = 'break-word';
+      tempText.style.whiteSpace = 'normal';
+      tempText.style.fontFamily = '"Pixelify Sans", sans-serif';
+      tempText.style.fontSize = '32px';
+      tempText.style.fontWeight = '600';
+      tempText.style.lineHeight = '1.4';
       tempContainer.appendChild(tempText);
       
-      // Measure actual width and height for THIS button's text
-      const textWidth = tempText.offsetWidth;
+      // Measure actual width and height for THIS button's text (with wrapping allowed)
+      const wrappedWidth = tempText.offsetWidth;
       const textHeight = tempText.offsetHeight;
       
       tempContainer.removeChild(tempText);
       
+      // Determine button width:
+      // - If text fits in one line (natural width <= 1200px), use natural width
+      // - If text wraps (natural width > 1200px), use the wrapped width (actual width after wrapping)
+      // - Always ensure minimum width of 600px
+      const actualTextWidth = naturalWidth <= 1200 ? naturalWidth : Math.max(wrappedWidth, 1200);
+      
       // Calculate button size: add padding (100px each side = 200px total, 50px top + 90px bottom = 140px total)
-      const buttonWidth = Math.max(textWidth + 200, 600);
+      const buttonWidth = Math.max(actualTextWidth + 200, 600);
       const buttonHeight = Math.max(textHeight + 140, 180);
       
       // Create the button
