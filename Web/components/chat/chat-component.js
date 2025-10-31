@@ -554,7 +554,7 @@ export function mountChat(containerSelector, options = {}){
     waitingForChoiceClick = false;
   }
 
-  function handleChoice(choice){ 
+  async function handleChoice(choice){ 
     // Hide choices and overlay when choice is made
     if(choicesEl) {
       choicesEl.classList.add('hidden');
@@ -565,14 +565,36 @@ export function mountChat(containerSelector, options = {}){
     }
     
     appendHistory({speaker:'duck', text:choice.text}); 
-    renderInlineDuckLine(choice.text); 
-    setTimeout(()=>{ 
-      if(choice.feedback) renderStepFromInline({speaker:'robot', text:choice.feedback, then:choice.next}); 
-      else renderStep(choice.next); 
-    }, 700); 
+    
+    // Show and type the duck's selected option text
+    await renderInlineDuckLine(choice.text);
+    
+    // Wait for duck's text to be fully displayed and visible before proceeding
+    // Give user time to read their selection (1500ms after typing completes)
+    await new Promise(r => setTimeout(r, 1500));
+    
+    // Now proceed to the next step (robot's response)
+    if(choice.feedback) {
+      await renderStepFromInline({speaker:'robot', text:choice.feedback, then:choice.next});
+    } else {
+      renderStep(choice.next);
+    }
   }
 
-  async function renderInlineDuckLine(text){ showAvatar('duck'); const speakerNames = options.speakerNames || {}; if(speakerLabel) speakerLabel.textContent = speakerNames.duck || 'You'; await typeLine(text); setTimeout(()=>hideAvatar('duck'), 500); }
+  async function renderInlineDuckLine(text){ 
+    showAvatar('duck'); 
+    const speakerNames = options.speakerNames || {}; 
+    if(speakerLabel) speakerLabel.textContent = speakerNames.duck || 'You'; 
+    
+    // Type the duck's text
+    await typeLine(text);
+    
+    // Keep duck visible for a moment after typing completes (1000ms)
+    await new Promise(r => setTimeout(r, 1000));
+    
+    // Then hide the duck avatar
+    hideAvatar('duck'); 
+  }
 
   async function renderStepFromInline(obj){ showAvatar(obj.speaker); const speakerNames = options.speakerNames || {}; const robotName = speakerNames.robot || 'QuackBot'; if(speakerLabel) speakerLabel.textContent = obj.speaker === 'robot' ? robotName : 'You'; await typeLine(obj.text); appendHistory({speaker:obj.speaker, text:obj.text}); setTimeout(()=>hideAvatar(obj.speaker),700); setTimeout(()=>renderStep(obj.then),700); }
 

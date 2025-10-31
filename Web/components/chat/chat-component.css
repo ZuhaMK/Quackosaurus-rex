@@ -17,7 +17,7 @@
  *   padding-right: 35px
  *   gap: 25px (space between text area and next button)
  */
-.quack-chat .chat-box{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:transparent;background-size:100% 100%;background-repeat:no-repeat;background-position:center;padding-top:10px;padding-bottom:60px;padding-left:50px;padding-right:35px;border:none;border-radius:0;display:flex;flex-direction:row;align-items:center;gap:25px;min-height:350px;min-width:400px;max-width:calc(100vw - 60px);opacity:0.95}
+.quack-chat .chat-box{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:transparent;background-size:100% 100%;background-repeat:no-repeat;background-position:center;padding-top:0px;padding-bottom:80px;padding-left:50px;padding-right:35px;border:none;border-radius:0;display:flex;flex-direction:row;align-items:center;gap:25px;min-height:350px;min-width:400px;max-width:calc(100vw - 60px);opacity:0.95}
 .quack-chat .chat-controls{display:none}
 .quack-chat .line-area{flex:1;background:transparent;color:#000;display:flex;flex-direction:column;gap:8px}
 .quack-chat .speaker-label{font-size:32px;color:#000;font-weight:700;font-family:'Pixelify Sans',sans-serif}
@@ -33,7 +33,7 @@
  *   padding-right: 100px
  *   Note: padding:0 is reset, then specific padding values applied
  */
-.quack-chat .choice-btn{background:transparent;border:none;padding:0;cursor:pointer;position:relative;font-family:'Pixelify Sans',sans-serif;font-size:32px;font-weight:600;color:#000;display:flex;align-items:center;justify-content:center;background-size:100% 100%;background-repeat:no-repeat;background-position:center;text-align:center;line-height:1.4;padding-top:50px;padding-bottom:90px;padding-left:100px;padding-right:100px;word-wrap:break-word;white-space:normal;min-height:180px;margin:0;box-sizing:border-box;transition:transform 0.2s ease, filter 0.2s ease}
+.quack-chat .choice-btn{background:transparent;border:none;padding:0;cursor:pointer;position:relative;font-family:'Pixelify Sans',sans-serif;font-size:32px;font-weight:600;color:#000;display:flex;align-items:center;justify-content:center;background-size:100% 100%;background-repeat:no-repeat;background-position:center;text-align:center;line-height:1.4;padding-top:50px;padding-bottom:50px;padding-left:100px;padding-right:100px;word-wrap:break-word;white-space:normal;min-height:180px;margin:0;box-sizing:border-box;transition:transform 0.2s ease, filter 0.2s ease}
 .quack-chat .choice-btn:hover{transform:scale(1.05);filter:brightness(1.1)}
 .quack-chat .choice-btn:active{transform:scale(0.98);filter:brightness(0.95)}
 .quack-chat .hidden{display:none}
