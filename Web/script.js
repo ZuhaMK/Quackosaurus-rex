@@ -1,41 +1,67 @@
-const chatBox = document.getElementById('chat-box');
-const userInput = document.getElementById('user-input');
-const sendBtn = document.getElementById('send-btn');
-
-function addMessage(role, text) {
-  const div = document.createElement('div');
-  div.className = role === 'user' ? 'chat chat-end' : 'chat chat-start';
-  div.innerHTML = `
-    <div class="chat-bubble ${role === 'user' ? 'chat-bubble-primary' : ''}">
-      ${text}
-    </div>
-  `;
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
 async function sendMessage() {
-  const message = userInput.value.trim();
-  if (!message) return;
+  const inputElement = document.getElementById("user-input");
+  const message = inputElement.value.trim();
 
-  addMessage('user', message);
-  userInput.value = '';
+  if (message === "") {
+    return;
+  }
+
+  inputElement.value = "";
+  const chatbox = document.getElementById("chat-box");
+
+  // Display user message
+  chatbox.innerHTML += `<p class="user-message"><strong>You:</strong> ${message}</p>`;
+
+  // Add temporary loading message
+  const loadingMessageId = `loading-${Date.now()}`;
+  chatbox.innerHTML += `<p id="${loadingMessageId}" class="ai-message meta"><strong>AI:</strong> Searching...</p>`;
+  chatbox.scrollTop = chatbox.scrollHeight;
 
   try {
-    const response = await fetch('/chat_api', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message })
+    // Fetch sends the user message to the Flask server's /chat route
+    const response = await fetch("/chat", { // NOTE: The Flask route is /chat, not /chat_api in the provided code
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ message: message })
     });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
-    addMessage('bot', data.reply);
+
+    // Remove loading message
+    document.getElementById(loadingMessageId)?.remove();
+
+    // Display AI's formatted reply
+    chatbox.innerHTML += `<p class="ai-message"><strong>AI:</strong> ${data.reply}</p>`;
+
   } catch (error) {
-    addMessage('bot', '⚠️ Error connecting to server.');
+    console.error("Error communicating with the backend:", error);
+    document.getElementById(loadingMessageId)?.remove();
+    chatbox.innerHTML += `<p class="error-message"><strong>AI Error:</strong> Check console. (Is the Flask server running?)</p>`;
   }
+
+  chatbox.scrollTop = chatbox.scrollHeight;
 }
 
-sendBtn.addEventListener('click', sendMessage);
-userInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') sendMessage();
+// Add event listener for the Send button and Enter key
+document.addEventListener('DOMContentLoaded', () => {
+  // Attach click listener to the Send button
+  const sendButton = document.getElementById("send-btn");
+  if (sendButton) {
+    sendButton.addEventListener('click', sendMessage);
+  }
+
+  // Correct ID for the input field and attach keypress listener
+  const inputElement = document.getElementById("user-input");
+  if (inputElement) {
+    inputElement.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault(); // Good practice to prevent default
+        sendMessage();
+      }
+    });
+  }
 });
