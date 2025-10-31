@@ -110,9 +110,9 @@
           },
           {
             id: 'no',
-            text: 'Nah, unless you can give me some monners',
+            text: 'Nah, unless you can give me some money',
             next: 3,
-            feedback: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free monners, trust me! 🦖💸"
+            feedback: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free money, trust me! 🦖💸"
           }
         ]
       },
@@ -124,7 +124,7 @@
       {
         id: 3,
         speaker: 'robot',
-        text: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free monners, trust me! 🦖💸"
+        text: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free money, trust me! 🦖💸"
       },
       {
         id: 4,
@@ -186,7 +186,7 @@
 
     // Multiple ways to trigger service options
     let servicesShown = false;
-    
+
     // Method 1: Monitor text changes in real-time
     const observer = new MutationObserver(() => {
       if (!servicesShown && checkStepAndShowServices()) {
@@ -197,7 +197,7 @@
         }, 1500);
       }
     });
-    
+
     // Method 2: Check periodically after dialogue starts
     setTimeout(() => {
       const checkInterval = setInterval(() => {
@@ -226,10 +226,10 @@
     // Method 3: Watch for text changes in line-text element
     const lineTextEl = container.querySelector('.line-text');
     if (lineTextEl) {
-      observer.observe(lineTextEl, { 
-        childList: true, 
-        characterData: true, 
-        subtree: true 
+      observer.observe(lineTextEl, {
+        childList: true,
+        characterData: true,
+        subtree: true
       });
     }
 
