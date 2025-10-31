@@ -1,10 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bank Reception - Quackosaurus-rex</title>
+  <link rel="stylesheet" href="components/chat/chat-component.css" />
+  <style>
+    .service-options {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      flex-direction: column;
+      gap: 1.5rem;
+      z-index: 1000;
+      animation: fadeInScale 0.5s ease-out;
+    }
+    .service-options.show {
+      display: flex;
+    }
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    .service-btn {
+      padding: 1.5rem 2.5rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      transition: all 0.3s ease;
+      color: white;
+      text-align: center;
+    }
+    .service-btn:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    .service-btn:active {
+      transform: translateY(-2px) scale(1.02);
+    }
+    .service-btn.savings {
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+    }
+    .service-btn.credit {
+      background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    }
+    .service-btn.consultant {
+      background: linear-gradient(135deg, #2196F3, #1976D2);
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      z-index: 999;
+    }
+    .overlay.show {
+      display: block;
+    }
+  </style>
 </head>
-<body class = "reception">
+<body>
+  <div id="bank-reception-container" style="height:100vh"></div>
 
+  <!-- Service Options Overlay -->
+  <div class="overlay" id="overlay"></div>
+  <div class="service-options" id="serviceOptions">
+    <button class="service-btn savings" onclick="window.location.href='savings&budget.html'">
+      💰 Savings & Budgeting Room<br>
+      <small style="font-size: 0.9rem; opacity: 0.9;">Learn to save like a pro and budget like a boss!</small>
+    </button>
+    <button class="service-btn credit" onclick="window.location.href='credit&debt.html'">
+      💳 Credit & Debt Room<br>
+      <small style="font-size: 0.9rem; opacity: 0.9;">Master credit scores and crush that debt!</small>
+    </button>
+    <button class="service-btn consultant" onclick="window.location.href='chat.html'">
+      🤖 Dr. GPT Financial Consultant<br>
+      <small style="font-size: 0.9rem; opacity: 0.9;">Get personalized advice from our AI financial expert!</small>
+    </button>
+  </div>
+
+  <script type="module">
+    import { mountChat } from './components/chat/chat-component.js';
+
+    // Bank Reception Dialogue
+    const BANK_RECEPTION_DIALOG = [
+      {
+        id: 0,
+        speaker: 'robot', // Using 'robot' for dino (left side)
+        text: 'Looks like someone is in big trouble!!! Hmmmm... I see you are close to broke... What about visiting our bank and getting some help?'
+      },
+      {
+        id: 1,
+        speaker: 'robot',
+        text: 'So, what do you say?',
+        choices: [
+          {
+            id: 'yes',
+            text: 'YES PLEASE HELP!!!',
+            next: 2,
+            feedback: "Fantastic enthusiasm! I love that energy! 💪 Let's get you on the right financial track!"
+          },
+          {
+            id: 'no',
+            text: 'Nah, unless you can give me some monners',
+            next: 3,
+            feedback: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free monners, trust me! 🦖💸"
+          }
+        ]
+      },
+      {
+        id: 2,
+        speaker: 'robot',
+        text: "Fantastic enthusiasm! I love that energy! 💪 Let's get you on the right financial track!"
+      },
+      {
+        id: 3,
+        speaker: 'robot',
+        text: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free monners, trust me! 🦖💸"
+      },
+      {
+        id: 4,
+        speaker: 'robot',
+        text: "Alright, let's get you sorted! We have three amazing services that will turn your financial life around. Choose one that interests you most:"
+      }
+    ];
+
+    function showServiceOptions() {
+      document.getElementById('overlay').classList.add('show');
+      document.getElementById('serviceOptions').classList.add('show');
+    }
+
+    function hideServiceOptions() {
+      document.getElementById('overlay').classList.remove('show');
+      document.getElementById('serviceOptions').classList.remove('show');
+    }
+
+    // Override the chat component to handle service selection
+    const chat = mountChat('#bank-reception-container', {
+      dialog: BANK_RECEPTION_DIALOG,
+      assetsPath: './assets',
+      speakerNames: {
+        robot: 'Dino Receptionist',
+        duck: 'You'
+      }
+    });
+
+    // Modify the background to use bank.jpeg
+    const container = document.querySelector('#bank-reception-container');
+    if (container) {
+      const bg = container.querySelector('.background');
+      if (bg) {
+        bg.style.background = 'linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("./assets/backgrounds/bank.jpeg") center/cover no-repeat';
+      }
+      // Update avatar for dino
+      const leftAvatar = container.querySelector('.avatar.left');
+      if (leftAvatar) {
+        leftAvatar.style.backgroundImage = 'url("./assets/characters/dino.GIF")';
+      }
+      // Update avatar for duck
+      const rightAvatar = container.querySelector('.avatar.right');
+      if (rightAvatar) {
+        rightAvatar.style.backgroundImage = 'url("./assets/characters/duckFlip.GIF")';
+      }
+    }
+
+    // Check if we should show service options
+    function checkStepAndShowServices() {
+      const lineText = container.querySelector('.line-text');
+      if (lineText) {
+        const text = lineText.textContent || '';
+        if (text.includes("three amazing services") || text.includes("Choose one that interests you most")) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Multiple ways to trigger service options
+    let servicesShown = false;
+    
+    // Method 1: Monitor text changes in real-time
+    const observer = new MutationObserver(() => {
+      if (!servicesShown && checkStepAndShowServices()) {
+        setTimeout(() => {
+          showServiceOptions();
+          servicesShown = true;
+          observer.disconnect();
+        }, 1500);
+      }
+    });
+    
+    // Method 2: Check periodically after dialogue starts
+    setTimeout(() => {
+      const checkInterval = setInterval(() => {
+        if (!servicesShown && checkStepAndShowServices()) {
+          setTimeout(() => {
+            showServiceOptions();
+            servicesShown = true;
+          }, 1500);
+          clearInterval(checkInterval);
+          observer.disconnect();
+        }
+      }, 500);
+
+      // Fallback: Force show after 10 seconds if not shown yet
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        observer.disconnect();
+        if (!servicesShown) {
+          console.log('Forcing service options to show (fallback)');
+          showServiceOptions();
+          servicesShown = true;
+        }
+      }, 10000);
+    }, 2000);
+
+    // Method 3: Watch for text changes in line-text element
+    const lineTextEl = container.querySelector('.line-text');
+    if (lineTextEl) {
+      observer.observe(lineTextEl, { 
+        childList: true, 
+        characterData: true, 
+        subtree: true 
+      });
+    }
+
+    // Method 4: Show on chat box click (after dialogue completes)
+    const chatBox = container.querySelector('.chat-box');
+    if (chatBox) {
+      let clickCount = 0;
+      const clickHandler = () => {
+        if (!servicesShown) {
+          clickCount++;
+          if (checkStepAndShowServices()) {
+            setTimeout(() => {
+              showServiceOptions();
+              servicesShown = true;
+            }, 500);
+            chatBox.removeEventListener('click', clickHandler);
+          } else if (clickCount >= 5) {
+            // After 5 clicks, force show (user likely finished dialogue)
+            setTimeout(() => {
+              showServiceOptions();
+              servicesShown = true;
+              chatBox.removeEventListener('click', clickHandler);
+            }, 500);
+          }
+        }
+      };
+      chatBox.addEventListener('click', clickHandler);
+    }
+
+    // Close overlay when clicking outside (but not on the buttons)
+    document.getElementById('overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'overlay') {
+        hideServiceOptions();
+      }
+    });
+  </script>
 </body>
 </html>

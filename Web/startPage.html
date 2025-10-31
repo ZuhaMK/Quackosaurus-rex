@@ -2,15 +2,88 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Home Page</title>
-    <link rel="stylesheet" href="styles/styles.css"> 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quackosaurus-rex: Financial Adventure</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+        .landing-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('assets/backgrounds/HouseOutside.jpeg') center/cover no-repeat;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 1s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: #fff;
+            text-align: center;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
+            margin-bottom: 3rem;
+            animation: slideDown 1s ease-out;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .enter-button {
+            font-size: 1.8rem;
+            font-weight: 700;
+            padding: 1.2rem 3rem;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            animation: slideUp 1s ease-out 0.3s both;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .enter-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.6);
+            background: linear-gradient(135deg, #45a049, #4CAF50);
+        }
+        .enter-button:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+                padding: 0 1rem;
+            }
+            .enter-button {
+                font-size: 1.2rem;
+                padding: 1rem 2rem;
+            }
+        }
+    </style>
 </head>
-
-<body class="startpg flex items-center justify-center min-h-screen">
-    <div class="start-button">
-        <button class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
-            Start Game
+<body>
+    <div class="landing-container">
+        <h1 class="title">🦆 Quackosaurus-rex:<br>Your Financial Adventure Awaits!</h1>
+        <button class="enter-button" onclick="window.location.href='bankReception.html'">
+            Enter the Bank
         </button>
     </div>
 </body>

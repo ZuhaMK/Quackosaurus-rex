@@ -1,10 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Title</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Savings & Budgeting Room - Quackosaurus-rex</title>
+  <link rel="stylesheet" href="components/chat/chat-component.css" />
 </head>
-<body class = "saving&budget">
+<body>
+  <div id="savings-container" style="height:100vh"></div>
 
+  <script type="module">
+    import { mountChat } from './components/chat/chat-component.js';
+
+    // Savings & Budgeting Dialogue
+    const SAVINGS_DIALOG = [
+      {
+        id: 0,
+        speaker: 'robot',
+        text: 'Welcome to the Savings & Budgeting Room! 🎉 This is where dreams become realities... or at least where your wallet becomes happy! Let\'s start with the basics: Do you know what a budget actually IS?'
+      },
+      {
+        id: 1,
+        speaker: 'robot',
+        text: 'What do you think a budget is?',
+        choices: [
+          {
+            id: 'a',
+            text: 'It\'s like... a plan for money?',
+            next: 2,
+            feedback: 'Exactly! A budget is like a roadmap for your money! You tell it where to go instead of wondering where it went! 🗺️'
+          },
+          {
+            id: 'b',
+            text: 'Something boring adults talk about?',
+            next: 3,
+            feedback: 'Well, it CAN be boring if you make it boring! But we\'re going to make it FUN! Think of it like a video game strategy guide for real life! 🎮'
+          },
+          {
+            id: 'c',
+            text: 'A magical money tree?',
+            next: 4,
+            feedback: 'Ha! I wish! But here\'s the thing - a budget IS kind of magical! It makes your money grow and work for you! Even better than a money tree! 🌳✨'
+          }
+        ]
+      },
+      {
+        id: 2,
+        speaker: 'robot',
+        text: 'Exactly! A budget is like a roadmap for your money! You tell it where to go instead of wondering where it went! 🗺️'
+      },
+      {
+        id: 3,
+        speaker: 'robot',
+        text: 'Well, it CAN be boring if you make it boring! But we\'re going to make it FUN! Think of it like a video game strategy guide for real life! 🎮'
+      },
+      {
+        id: 4,
+        speaker: 'robot',
+        text: 'Ha! I wish! But here\'s the thing - a budget IS kind of magical! It makes your money grow and work for you! Even better than a money tree! 🌳✨'
+      },
+      {
+        id: 5,
+        speaker: 'robot',
+        text: 'Alright, time for a quick quiz! The famous 50/30/20 rule says you should spend:\n• 50% on needs (like food, rent, bills)\n• 30% on wants (like games, snacks, fun stuff)\n• 20% on savings\n\nSo if you make $1000 a month, how much should go to savings?'
+      },
+      {
+        id: 6,
+        speaker: 'robot',
+        text: 'Choose your answer:',
+        choices: [
+          {
+            id: 'a',
+            text: '$50',
+            next: 7,
+            feedback: 'Close! But that\'s only 5%. Try again! The rule is 20%, so $200! 💡'
+          },
+          {
+            id: 'b',
+            text: '$200',
+            next: 8,
+            feedback: 'YES! That\'s exactly right! You\'re a budgeting genius! 🎉'
+          },
+          {
+            id: 'c',
+            text: '$500',
+            next: 9,
+            feedback: 'Whoa there! That\'s 50%, which is way too aggressive. The rule is 20%, so $200 is the right answer!'
+          }
+        ]
+      },
+      {
+        id: 7,
+        speaker: 'robot',
+        text: 'Close! But that\'s only 5%. Try again! The rule is 20%, so $200! 💡'
+      },
+      {
+        id: 8,
+        speaker: 'robot',
+        text: 'YES! That\'s exactly right! You\'re a budgeting genius! 🎉'
+      },
+      {
+        id: 9,
+        speaker: 'robot',
+        text: 'Whoa there! That\'s 50%, which is way too aggressive. The rule is 20%, so $200 is the right answer!'
+      },
+      {
+        id: 10,
+        speaker: 'robot',
+        text: 'Okay, time for a REAL challenge! Imagine you\'re a duck living in the city. You make $1200/month. Here\'s what you NEED to pay:\n• Rent: $600\n• Food: $200\n• Bills (utilities, phone): $150\n• Transportation: $100\n\nYou have $150 left. What should you do with it?'
+      },
+      {
+        id: 11,
+        speaker: 'robot',
+        text: 'What would you do?',
+        choices: [
+          {
+            id: 'a',
+            text: 'Save it all! $150 to savings!',
+            next: 12,
+            feedback: 'Perfect! Emergency fund, here you come! You\'re going places! 💰'
+          },
+          {
+            id: 'b',
+            text: 'Buy that cool game I\'ve been wanting! It\'s only $60!',
+            next: 13,
+            feedback: 'Well... maybe save $90 and spend $60? Balance is key! 🎮'
+          },
+          {
+            id: 'c',
+            text: 'Treat myself! I deserve it after all!',
+            next: 14,
+            feedback: 'Hmm... while treating yourself is nice, saving should come first! Try to save at least some of it!'
+          }
+        ]
+      },
+      {
+        id: 12,
+        speaker: 'robot',
+        text: 'Perfect! Emergency fund, here you come! You\'re going places! 💰'
+      },
+      {
+        id: 13,
+        speaker: 'robot',
+        text: 'Well... maybe save $90 and spend $60? Balance is key! 🎮'
+      },
+      {
+        id: 14,
+        speaker: 'robot',
+        text: 'Hmm... while treating yourself is nice, saving should come first! Try to save at least some of it!'
+      },
+      {
+        id: 15,
+        speaker: 'robot',
+        text: 'Great job! Now, an emergency fund is super important! It\'s like a safety net for when life throws you a curveball (or a breadcrumb in your case! 🦆). How much should you save in an emergency fund?'
+      },
+      {
+        id: 16,
+        speaker: 'robot',
+        text: 'How much should you save?',
+        choices: [
+          {
+            id: 'a',
+            text: 'Enough for 1 month of expenses',
+            next: 17,
+            feedback: 'Good start! But ideally, aim for 3-6 months! That way you\'re really protected!'
+          },
+          {
+            id: 'b',
+            text: 'Enough for 3-6 months of expenses',
+            next: 18,
+            feedback: 'PERFECT! You\'ve got this financial stuff figured out! 🏆'
+          },
+          {
+            id: 'c',
+            text: 'Just enough for a pizza',
+            next: 19,
+            feedback: 'Ha! Nice try, but we need a bit more than that! 😂'
+          }
+        ]
+      },
+      {
+        id: 17,
+        speaker: 'robot',
+        text: 'Good start! But ideally, aim for 3-6 months! That way you\'re really protected!'
+      },
+      {
+        id: 18,
+        speaker: 'robot',
+        text: 'PERFECT! You\'ve got this financial stuff figured out! 🏆'
+      },
+      {
+        id: 19,
+        speaker: 'robot',
+        text: 'Ha! Nice try, but we need a bit more than that! 😂'
+      },
+      {
+        id: 20,
+        speaker: 'robot',
+        text: 'Here are some pro tips to supercharge your savings:\n1. 💰 Pay yourself first - Save before you spend!\n2. 🎯 Set specific goals - "I want $500 by December"\n3. 📱 Use apps to track spending - knowledge is power!\n4. 🍕 Cook at home - It\'s cheaper AND healthier!\n5. 🎁 Wait 24 hours before buying wants - impulse buys are budget killers!\n\nRemember: Small steps lead to big wins! 🏆'
+      },
+      {
+        id: 21,
+        speaker: 'robot',
+        text: 'You\'ve learned SO much today! You\'re now equipped with budgeting superpowers! Go out there and make your money work for you! 🚀\n\nClick "Back" to return to the reception, or refresh to restart this room!'
+      }
+    ];
+
+    const chat = mountChat('#savings-container', {
+      dialog: SAVINGS_DIALOG,
+      assetsPath: './assets',
+      speakerNames: {
+        robot: 'Budget Advisor',
+        duck: 'You'
+      }
+    });
+
+    // Update background and avatars
+    const container = document.querySelector('#savings-container');
+    if (container) {
+      const bg = container.querySelector('.background');
+      if (bg) {
+        bg.style.background = 'linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("./assets/backgrounds/LivingRoom.jpeg") center/cover no-repeat';
+      }
+      // Use dino for advisor
+      const leftAvatar = container.querySelector('.avatar.left');
+      if (leftAvatar) {
+        leftAvatar.style.backgroundImage = 'url("./assets/characters/dino.GIF")';
+      }
+      const rightAvatar = container.querySelector('.avatar.right');
+      if (rightAvatar) {
+        rightAvatar.style.backgroundImage = 'url("./assets/characters/duckFlip.GIF")';
+      }
+      
+      // Update back button to go to reception
+      const backBtn = container.querySelector('.btn-back');
+      if (backBtn) {
+        backBtn.addEventListener('click', () => {
+          window.location.href = 'bankReception.html';
+        });
+      }
+    }
+  </script>
 </body>
 </html>

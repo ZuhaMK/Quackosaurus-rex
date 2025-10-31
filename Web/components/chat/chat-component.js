@@ -77,19 +77,89 @@ export function mountChat(containerSelector, options = {}){
   let waitingForClick = false;
   let currentStepText = '';
 
-  // audio
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playCharTone(){
-    const now = audioCtx.currentTime; const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-    o.type='sine'; o.frequency.setValueAtTime(880, now); g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.04, now+0.01);
-    o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now+0.06);
+  // audio - using animalese.js
+  let currentAnimaleseAudio = null;
+  
+  async function loadAnimalese() {
+    // Check if animalese is already loaded
+    if (window.animalese) {
+      return window.animalese;
+    }
+    
+    // Load animalese.js if not already loaded
+    return new Promise((resolve, reject) => {
+      if (window.animalese) {
+        resolve(window.animalese);
+        return;
+      }
+      
+      const script = document.createElement('script');
+      script.src = 'https://acedio.github.io/animalese.js/animalese.js';
+      script.onload = () => {
+        if (window.animalese) {
+          resolve(window.animalese);
+        } else {
+          reject(new Error('Animalese failed to load'));
+        }
+      };
+      script.onerror = () => reject(new Error('Failed to load animalese.js'));
+      document.head.appendChild(script);
+    });
   }
-  function playLineAudio(){
-    const now = audioCtx.currentTime;
-    const o1 = audioCtx.createOscillator(), g1 = audioCtx.createGain(); o1.type='triangle'; o1.frequency.setValueAtTime(660, now);
-    g1.gain.setValueAtTime(0.001, now); g1.gain.linearRampToValueAtTime(0.05, now+0.02); o1.connect(g1); g1.connect(audioCtx.destination); o1.start(now); o1.stop(now+0.18);
-    const o2 = audioCtx.createOscillator(), g2 = audioCtx.createGain(); o2.type='sine'; o2.frequency.setValueAtTime(880, now+0.08);
-    g2.gain.setValueAtTime(0.001, now+0.08); g2.gain.linearRampToValueAtTime(0.04, now+0.12); o2.connect(g2); g2.connect(audioCtx.destination); o2.start(now+0.08); o2.stop(now+0.28);
+
+  async function playCharTone(text = ''){
+    // For character-by-character, we'll use a simpler approach
+    // Just prepare for full text animalese
+    return;
+  }
+
+  async function playLineAudio(text = ''){
+    try {
+      // Stop any currently playing audio
+      if (currentAnimaleseAudio) {
+        if (!currentAnimaleseAudio.paused) {
+          currentAnimaleseAudio.pause();
+        }
+        currentAnimaleseAudio.currentTime = 0;
+      }
+      
+      // Only play if we have text
+      if (!text || text.trim() === '') {
+        return;
+      }
+      
+      // Load animalese if needed
+      const animalese = await loadAnimalese();
+      
+      // Generate and play animalese audio for the text
+      // animalese.js returns an Audio object
+      if (typeof animalese === 'function') {
+        try {
+          // Try with options first (pitch adjustment)
+          currentAnimaleseAudio = animalese(text, { pitch: 20 });
+          // If that doesn't work, try without options
+          if (!currentAnimaleseAudio) {
+            currentAnimaleseAudio = animalese(text);
+          }
+          
+          if (currentAnimaleseAudio && currentAnimaleseAudio.play) {
+            // Ensure audio can play
+            const playPromise = currentAnimaleseAudio.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(err => {
+                // Auto-play was prevented, user interaction required
+                console.debug('Animalese audio requires user interaction:', err);
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('Error generating animalese audio:', err);
+        }
+      }
+    } catch (error) {
+      // Graceful degradation - if animalese fails, chat still works
+      console.warn('Animalese audio error (continuing without audio):', error);
+    }
   }
 
   // util
@@ -132,20 +202,48 @@ export function mountChat(containerSelector, options = {}){
     if(avatarRight) avatarRight.style.backgroundImage = `url('${base.replace(/\/$/,'')}/characters/duckFlip.GIF')`;
   })();
 
-  async function typeLine(text){ isTyping = true; if(!lineText) return; lineText.textContent = '';
-    for(let i=0;i<text.length;i++){ lineText.textContent += text[i]; if(text[i].trim()) playCharTone(); await new Promise(r=>setTimeout(r, 28 + Math.random()*40)); }
-    isTyping = false; }
+  async function typeLine(text){ 
+    isTyping = true; 
+    if(!lineText) return; 
+    lineText.textContent = '';
+    
+    // Start playing animalese audio for the full text
+    playLineAudio(text);
+    
+    // Type character by character
+    for(let i=0;i<text.length;i++){ 
+      // Check if user clicked to skip (handled by main click handler)
+      if (!isTyping) {
+        // User clicked, show full text immediately
+        lineText.textContent = text;
+        break;
+      }
+      lineText.textContent += text[i]; 
+      await new Promise(r=>setTimeout(r, 28 + Math.random()*40)); 
+    }
+    
+    // Ensure full text is shown
+    if (lineText) {
+      lineText.textContent = text;
+    }
+    
+    isTyping = false; 
+  }
 
   async function renderStep(i){
     if(i<0) i=0; if(i>=DIALOG.length) i=DIALOG.length-1; index=i; const step = DIALOG[i];
-    if(speakerLabel) speakerLabel.textContent = step.speaker === 'robot' ? 'QuackBot' : 'The Duck';
+    // Support custom speaker names from options
+    const speakerNames = options.speakerNames || {};
+    const robotName = speakerNames.robot || 'QuackBot';
+    const duckName = speakerNames.duck || 'The Duck';
+    if(speakerLabel) speakerLabel.textContent = step.speaker === 'robot' ? robotName : duckName;
     // prepare current text (used for click-to-complete)
     currentStepText = step.text || '';
     showAvatar(step.speaker); hideAvatar(step.speaker==='robot'?'duck':'robot');
 
     // type the text (user can click during typing to finish immediately)
     await typeLine(step.text);
-    playLineAudio();
+    // Animalese is already playing from typeLine, no need to call again
     appendHistory({speaker:step.speaker, text:step.text});
 
     // show choices if present; if not, enable click-to-continue
@@ -154,7 +252,7 @@ export function mountChat(containerSelector, options = {}){
       waitingForClick = false;
     } else {
       choicesEl.classList.add('hidden');
-      // if there's a next line, wait for user click to continue
+      // Always wait for user click to continue (no auto-advance)
       if(index < DIALOG.length-1){
         waitingForClick = true;
       } else {
@@ -174,9 +272,9 @@ export function mountChat(containerSelector, options = {}){
 
   function handleChoice(choice){ appendHistory({speaker:'duck', text:choice.text}); renderInlineDuckLine(choice.text); setTimeout(()=>{ if(choice.feedback) renderStepFromInline({speaker:'robot', text:choice.feedback, then:choice.next}); else renderStep(choice.next); }, 700); }
 
-  async function renderInlineDuckLine(text){ showAvatar('duck'); if(speakerLabel) speakerLabel.textContent='You'; await typeLine(text); playLineAudio(); setTimeout(()=>hideAvatar('duck'), 500); }
+  async function renderInlineDuckLine(text){ showAvatar('duck'); const speakerNames = options.speakerNames || {}; if(speakerLabel) speakerLabel.textContent = speakerNames.duck || 'You'; await typeLine(text); setTimeout(()=>hideAvatar('duck'), 500); }
 
-  async function renderStepFromInline(obj){ showAvatar(obj.speaker); if(speakerLabel) speakerLabel.textContent = obj.speaker === 'robot' ? 'QuackBot' : 'You'; await typeLine(obj.text); playLineAudio(); appendHistory({speaker:obj.speaker, text:obj.text}); setTimeout(()=>hideAvatar(obj.speaker),700); setTimeout(()=>renderStep(obj.then),700); }
+  async function renderStepFromInline(obj){ showAvatar(obj.speaker); const speakerNames = options.speakerNames || {}; const robotName = speakerNames.robot || 'QuackBot'; if(speakerLabel) speakerLabel.textContent = obj.speaker === 'robot' ? robotName : 'You'; await typeLine(obj.text); appendHistory({speaker:obj.speaker, text:obj.text}); setTimeout(()=>hideAvatar(obj.speaker),700); setTimeout(()=>renderStep(obj.then),700); }
 
   function renderHistoryList(){ if(!historyList) return; historyList.innerHTML = ''; history.forEach(h=>{ const it = document.createElement('div'); it.className='history-item ' + (h.speaker==='robot'?'robot':'duck'); const av = document.createElement('div'); av.className='history-avatar'; av.textContent = h.speaker==='robot' ? 'R':'D'; const b = document.createElement('div'); b.className='history-bubble'; b.textContent = h.text; it.appendChild(av); it.appendChild(b); historyList.appendChild(it); }); }
 
@@ -194,32 +292,45 @@ export function mountChat(containerSelector, options = {}){
   const chatBoxEl = container.querySelector('.chat-box');
   if(chatBoxEl){
     chatBoxEl.addEventListener('click', (e)=>{
-      // if typing, finish immediately
-      if(isTyping){
-        // finish the typewriter immediately
-        isTyping = false;
-        if(lineText && currentStepText) lineText.textContent = currentStepText;
-        playLineAudio();
+      // Don't trigger on button clicks inside chat box
+      if (e.target.tagName === 'BUTTON') {
         return;
       }
+      
+      // First click: if typing, finish immediately and show full text
+      if(isTyping){
+        isTyping = false; // This will cause typeLine to display full text
+        if(lineText && currentStepText) {
+          lineText.textContent = currentStepText;
+        }
+        return; // Don't advance to next step yet
+      }
 
-      // if we are waiting for click to continue (no choices shown), advance
+      // Second click: if waiting for click to continue (no choices shown), advance to next step
       if(waitingForClick){
         waitingForClick = false;
         if(index < DIALOG.length-1){
           renderStep(index+1);
         }
       }
-    });
+    }, { once: false });
   }
 
-  // audio unlock
-  document.body.addEventListener('click', function unlock(){ audioCtx.resume && audioCtx.resume(); document.body.removeEventListener('click', unlock); });
+  // audio unlock - ensure audio context can play (for animalese)
+  document.body.addEventListener('click', function unlock(){ 
+    // Audio context may be needed for animalese
+    if (window.AudioContext || window.webkitAudioContext) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      ctx.resume && ctx.resume();
+    }
+    document.body.removeEventListener('click', unlock); 
+  });
 
   // start
   renderStep(0);
 
-  (async function autoAdvance(){ while(true){ while(isTyping) await new Promise(r=>setTimeout(r,200)); const step = DIALOG[index]; if(step && step.choices) break; if(index < DIALOG.length-1){ await new Promise(r=>setTimeout(r,900)); await renderStep(index+1); index = Math.min(index+1, DIALOG.length-1); } else break; }})();
+  // Auto-advance disabled - user must click to proceed to next line
+  // (async function autoAdvance(){ while(true){ while(isTyping) await new Promise(r=>setTimeout(r,200)); const step = DIALOG[index]; if(step && step.choices) break; if(index < DIALOG.length-1){ await new Promise(r=>setTimeout(r,900)); await renderStep(index+1); index = Math.min(index+1, DIALOG.length-1); } else break; }})();
 
   // return an API to control externally
   return {
