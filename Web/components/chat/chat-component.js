@@ -87,6 +87,8 @@ export function mountChat(containerSelector, options = {}){
   let index = 0; let history = []; let isTyping = false;
   let waitingForClick = false;
   let waitingForChoiceClick = false; // New: tracks if we're waiting for click to show choices
+  let waitingForDuckClick = false; // Tracks if we're waiting for click after duck's selection
+  let pendingChoice = null; // Stores the choice to process after duck click
   let currentStepText = '';
 
   // audio - using animalese.js
@@ -554,7 +556,7 @@ export function mountChat(containerSelector, options = {}){
     waitingForChoiceClick = false;
   }
 
-  function handleChoice(choice){ 
+  async function handleChoice(choice){ 
     // Hide choices and overlay when choice is made
     if(choicesEl) {
       choicesEl.classList.add('hidden');
@@ -565,14 +567,54 @@ export function mountChat(containerSelector, options = {}){
     }
     
     appendHistory({speaker:'duck', text:choice.text}); 
-    renderInlineDuckLine(choice.text); 
-    setTimeout(()=>{ 
-      if(choice.feedback) renderStepFromInline({speaker:'robot', text:choice.feedback, then:choice.next}); 
-      else renderStep(choice.next); 
-    }, 700); 
+    
+    // Show and type the duck's selected option text
+    await renderInlineDuckLine(choice.text);
+    
+    // Store the choice and wait for user to click textbox before proceeding
+    pendingChoice = choice;
+    waitingForDuckClick = true;
+    
+    // Show Next button to indicate user can click to proceed
+    if(btnNext) btnNext.classList.remove('hidden');
+  }
+  
+  // Function to process the pending choice after user clicks textbox
+  async function processPendingChoice() {
+    if (!pendingChoice) return;
+    
+    const choice = pendingChoice;
+    pendingChoice = null;
+    waitingForDuckClick = false;
+    
+    // Hide duck avatar before proceeding
+    hideAvatar('duck');
+    
+    // Hide Next button
+    if(btnNext) btnNext.classList.add('hidden');
+    
+    // Small delay before robot response appears
+    await new Promise(r => setTimeout(r, 300));
+    
+    // Now proceed to the next step (robot's response)
+    if(choice.feedback) {
+      await renderStepFromInline({speaker:'robot', text:choice.feedback, then:choice.next});
+    } else {
+      renderStep(choice.next);
+    }
   }
 
-  async function renderInlineDuckLine(text){ showAvatar('duck'); const speakerNames = options.speakerNames || {}; if(speakerLabel) speakerLabel.textContent = speakerNames.duck || 'You'; await typeLine(text); setTimeout(()=>hideAvatar('duck'), 500); }
+  async function renderInlineDuckLine(text){ 
+    showAvatar('duck'); 
+    const speakerNames = options.speakerNames || {}; 
+    if(speakerLabel) speakerLabel.textContent = speakerNames.duck || 'You'; 
+    
+    // Type the duck's text
+    await typeLine(text);
+    
+    // Keep duck visible - will hide when user clicks to proceed
+    // Don't hide avatar immediately, wait for user click
+  }
 
   async function renderStepFromInline(obj){ showAvatar(obj.speaker); const speakerNames = options.speakerNames || {}; const robotName = speakerNames.robot || 'QuackBot'; if(speakerLabel) speakerLabel.textContent = obj.speaker === 'robot' ? robotName : 'You'; await typeLine(obj.text); appendHistory({speaker:obj.speaker, text:obj.text}); setTimeout(()=>hideAvatar(obj.speaker),700); setTimeout(()=>renderStep(obj.then),700); }
 
@@ -652,6 +694,12 @@ export function mountChat(containerSelector, options = {}){
           lineText.textContent = currentStepText;
         }
         return; // Don't advance to next step yet
+      }
+
+      // Second click: if waiting for duck's selection to be processed (after duck's text displays)
+      if(waitingForDuckClick){
+        processPendingChoice();
+        return;
       }
 
       // Second click: if waiting for choices to be shown (question fully displayed)
