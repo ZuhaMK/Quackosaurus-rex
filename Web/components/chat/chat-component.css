@@ -16,9 +16,9 @@
 .quack-chat .speaker-label{font-size:32px;color:#fff;font-weight:700;font-family:'Pixelify Sans',sans-serif}
 .quack-chat .line-text{font-size:36px;line-height:1.4;min-height:80px;font-family:'Pixelify Sans',sans-serif;font-weight:400}
 
-.quack-chat .choices{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);display:none;flex-direction:column;gap:20px;z-index:1000}
+.quack-chat .choices{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);display:none;flex-direction:column;gap:10px;z-index:1000}
 .quack-chat .choices.show{display:flex}
-.quack-chat .choice-btn{background:transparent;border:none;padding:0;cursor:pointer;position:relative;font-family:'Pixelify Sans',sans-serif;font-size:32px;font-weight:600;color:#000;display:flex;align-items:center;justify-content:center;background-size:100% 100%;background-repeat:no-repeat;background-position:center;text-align:center;line-height:1.4;padding-top:50px;padding-bottom:90px;padding-left:100px;padding-right:100px;word-wrap:break-word;white-space:normal;min-height:200px}
+.quack-chat .choice-btn{background:transparent;border:none;padding:0;cursor:pointer;position:relative;font-family:'Pixelify Sans',sans-serif;font-size:32px;font-weight:600;color:#000;display:flex;align-items:center;justify-content:center;background-size:100% 100%;background-repeat:no-repeat;background-position:center;text-align:center;line-height:1.4;padding-top:50px;padding-bottom:90px;padding-left:100px;padding-right:100px;word-wrap:break-word;white-space:normal;min-height:180px;margin:0;box-sizing:border-box}
 .quack-chat .hidden{display:none}
 
 /* Dropdown menu top-right */

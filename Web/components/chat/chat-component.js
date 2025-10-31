@@ -292,51 +292,38 @@ export function mountChat(containerSelector, options = {}){
     const bubbleAssets = ['bubblePink.png', 'bubbleYellow.png', 'bubbleBlue.PNG'];
     const tabAssets = ['tabPink.png', 'tabYellow.png', 'tabBlue.png', 'tabGreen.png'];
     
-    // First, find the longest text to determine button width AND height needed
-    // Use temporary elements to measure actual rendered size
+    // Create a temporary container for measuring text
     const tempContainer = document.createElement('div');
     tempContainer.style.position = 'absolute';
     tempContainer.style.visibility = 'hidden';
     tempContainer.style.fontFamily = '"Pixelify Sans", sans-serif';
     tempContainer.style.fontSize = '32px';
     tempContainer.style.fontWeight = '600';
-    tempContainer.style.paddingTop = '50px';
-    tempContainer.style.paddingBottom = '90px';
-    tempContainer.style.paddingLeft = '100px';
-    tempContainer.style.paddingRight = '100px';
     tempContainer.style.wordWrap = 'break-word';
     tempContainer.style.whiteSpace = 'normal';
-    tempContainer.style.width = '700px'; // Start with min width
+    tempContainer.style.width = '800px'; // Max width constraint
     document.body.appendChild(tempContainer);
     
-    let maxTextWidth = 0;
-    let maxTextHeight = 0;
-    
-    choices.forEach((c) => {
+    // Create each button with its own dynamic size based on its text
+    choices.forEach((c, idx)=>{
+      // Measure this specific button's text
       const tempText = document.createElement('div');
       tempText.textContent = c.text;
-      tempText.style.width = 'auto';
       tempText.style.display = 'inline-block';
+      tempText.style.maxWidth = '800px';
       tempContainer.appendChild(tempText);
       
-      // Measure actual width and height
-      const width = tempText.offsetWidth;
-      const height = tempText.offsetHeight;
-      if(width > maxTextWidth) maxTextWidth = width;
-      if(height > maxTextHeight) maxTextHeight = height;
+      // Measure actual width and height for THIS button's text
+      const textWidth = tempText.offsetWidth;
+      const textHeight = tempText.offsetHeight;
       
       tempContainer.removeChild(tempText);
-    });
-    
-    document.body.removeChild(tempContainer);
-    
-    // Add extra horizontal padding to make buttons wider (100px on each side = 200px total)
-    const buttonWidth = Math.max(maxTextWidth + 200, 800);
-    // Add asymmetric vertical padding (50px top + 90px bottom = 140px total) for better visual centering
-    const buttonHeight = Math.max(maxTextHeight + 140, 200);
-    
-    // Now create the actual buttons with consistent width and adequate height
-    choices.forEach((c, idx)=>{
+      
+      // Calculate button size: add padding (100px each side = 200px total, 50px top + 90px bottom = 140px total)
+      const buttonWidth = Math.max(textWidth + 200, 600);
+      const buttonHeight = Math.max(textHeight + 140, 180);
+      
+      // Create the button
       const b = document.createElement('button');
       b.className='choice-btn';
       b.textContent=c.text;
@@ -345,12 +332,18 @@ export function mountChat(containerSelector, options = {}){
       const assetIndex = idx % tabAssets.length;
       const assetPath = options.assetsPath ? `${options.assetsPath}/tabs/${tabAssets[assetIndex]}` : `./assets/tabs/${tabAssets[assetIndex]}`;
       b.style.backgroundImage = `url('${assetPath}')`;
-      // Set consistent width and height for all buttons based on content
+      // Set individual width and height based on THIS button's text
       b.style.width = `${buttonWidth}px`;
       b.style.height = `${buttonHeight}px`;
       b.style.minHeight = `${buttonHeight}px`;
+      // Remove any margin/padding that might cause larger clickable area
+      b.style.margin = '0';
+      b.style.overflow = 'visible';
       choicesEl.appendChild(b);
     });
+    
+    document.body.removeChild(tempContainer);
+    
     choicesEl.classList.remove('hidden');
     choicesEl.classList.add('show');
     // Hide Next button when choices are shown
