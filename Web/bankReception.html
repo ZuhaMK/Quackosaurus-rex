@@ -184,34 +184,36 @@
       }
     }
 
-    // Show service options ONLY after step 4 is complete and user has seen it
+    // Show service options AFTER step 4 (final dialogue) completes typing
     let servicesShown = false;
     
     // Hook into the chat component to know when step 4 finishes
     const checkAndShowServices = () => {
-      if (servicesShown) return;
+      if (servicesShown) return false;
       
       const lineText = container.querySelector('.line-text');
-      const btnNext = container.querySelector('.btn-next');
+      if (!lineText) return false;
       
-      if (lineText) {
-        const text = lineText.textContent || '';
-        // Only show if:
-        // 1. Text contains the final message
-        // 2. Next button is visible (meaning dialogue is complete and waiting)
-        // 3. User has had time to read it (wait a bit after Next appears)
-        if (text.includes("three amazing services") && 
-            text.includes("Choose one that interests you most")) {
-          
-          // Check if Next button is visible (dialogue finished)
-          if (btnNext && !btnNext.classList.contains('hidden')) {
-            // Wait a moment for user to see the message, then show options
+      const text = lineText.textContent || '';
+      
+      // Check if step 4 text is displayed (this is the final step with service options message)
+      if (text.includes("three amazing services") && 
+          text.includes("Choose one that interests you most")) {
+        
+        // Check if text is complete (not typing) by comparing length
+        // Step 4 text is: "Alright, let's get you sorted! We have three amazing services that will turn your financial life around. Choose one that interests you most:"
+        const expectedText = "Alright, let's get you sorted! We have three amazing services that will turn your financial life around. Choose one that interests you most:";
+        
+        // If text matches or is close to complete, and we haven't shown yet
+        if (text.trim().length >= expectedText.length * 0.9) {
+          // Wait a moment for user to see the message, then show options
+          if (!servicesShown) {
             setTimeout(() => {
               if (!servicesShown) {
                 showServiceOptions();
                 servicesShown = true;
               }
-            }, 2000);
+            }, 1500);
             return true;
           }
         }
@@ -219,49 +221,42 @@
       return false;
     };
     
-    // Monitor for when step 4 completes
-    setTimeout(() => {
-      // Check periodically
-      const checkInterval = setInterval(() => {
-        if (checkAndShowServices()) {
-          clearInterval(checkInterval);
+    // Start monitoring immediately
+    // Watch text changes in the line-text element
+    const lineTextEl = container.querySelector('.line-text');
+    if (lineTextEl) {
+      let lastText = '';
+      const textObserver = new MutationObserver(() => {
+        const currentText = lineTextEl.textContent || '';
+        // Only check when text actually changes
+        if (currentText !== lastText) {
+          lastText = currentText;
+          checkAndShowServices();
         }
-      }, 800);
+      });
       
-      // Also listen for Next button becoming visible
-      const nextBtn = container.querySelector('.btn-next');
-      if (nextBtn) {
-        const nextObserver = new MutationObserver(() => {
-          checkAndShowServices();
-        });
-        nextObserver.observe(nextBtn, { 
-          attributes: true, 
-          attributeFilter: ['class'],
-          attributeOldValue: false
-        });
-      }
+      textObserver.observe(lineTextEl, { 
+        childList: true, 
+        characterData: true, 
+        subtree: true 
+      });
       
-      // Watch text changes
-      const lineTextEl = container.querySelector('.line-text');
-      if (lineTextEl) {
-        const textObserver = new MutationObserver(() => {
-          checkAndShowServices();
-        });
-        textObserver.observe(lineTextEl, { 
-          childList: true, 
-          characterData: true, 
-          subtree: true 
-        });
-      }
+      // Also check periodically as backup
+      const checkInterval = setInterval(() => {
+        if (checkAndShowServices() || servicesShown) {
+          clearInterval(checkInterval);
+          textObserver.disconnect();
+        }
+      }, 500);
       
-      // Fallback after 20 seconds max
+      // Fallback: Force show after 10 seconds if step 4 text is present
       setTimeout(() => {
         clearInterval(checkInterval);
         if (!servicesShown && checkAndShowServices()) {
           // Already handled
         }
-      }, 20000);
-    }, 3000);
+      }, 10000);
+    }
 
     // Close overlay when clicking outside (but not on the buttons)
     document.getElementById('overlay').addEventListener('click', (e) => {
