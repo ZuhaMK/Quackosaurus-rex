@@ -1,6 +1,12 @@
 /* --- General layout adjustments --- */
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap');
+
+* {
+  font-family: 'Pixelify Sans', cursive;
+}
+
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Pixelify Sans', cursive;
   overflow: hidden;
 }
 

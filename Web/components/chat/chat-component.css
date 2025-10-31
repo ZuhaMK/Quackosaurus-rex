@@ -1,5 +1,6 @@
 /* Scoped chat component styles (prefix .quack-chat) */
-.quack-chat{position:relative;height:100vh;font-family:Segoe UI, Roboto, Helvetica, Arial, sans-serif}
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap');
+.quack-chat{position:relative;height:100vh;font-family:'Pixelify Sans',cursive}
 .quack-chat .background{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("../assets/backgrounds/LivingRoom.jpeg") center/cover no-repeat}
 .quack-chat .stage{position:absolute;inset:40px 40px 160px 40px;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
 .quack-chat .avatar{width:320px;height:420px;background:none;color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;border-radius:0;opacity:0;transform:translateY(30px);transition:opacity .45s ease, transform .45s ease;overflow:visible}
