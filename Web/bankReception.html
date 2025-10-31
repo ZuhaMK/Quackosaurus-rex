@@ -36,8 +36,20 @@
       cursor: pointer;
       box-shadow: 0 6px 20px rgba(0,0,0,0.4);
       transition: all 0.3s ease;
-      color: white;
+      color: #000;
       text-align: center;
+      background: transparent;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      min-width: 450px;
+      min-height: 120px;
+      font-family: 'Pixelify Sans', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
     }
     .service-btn:hover {
       transform: translateY(-5px) scale(1.05);
@@ -47,13 +59,13 @@
       transform: translateY(-2px) scale(1.02);
     }
     .service-btn.savings {
-      background: linear-gradient(135deg, #FFD700, #FFA500);
+      background-image: url('./assets/bubbles/bubbleYellow.png');
     }
     .service-btn.credit {
-      background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+      background-image: url('./assets/bubbles/bubblePink.png');
     }
     .service-btn.consultant {
-      background: linear-gradient(135deg, #2196F3, #1976D2);
+      background-image: url('./assets/bubbles/bubbleBlue.PNG');
     }
     .overlay {
       position: fixed;
@@ -172,92 +184,84 @@
       }
     }
 
-    // Check if we should show service options
-    function checkStepAndShowServices() {
+    // Show service options ONLY after step 4 is complete and user has seen it
+    let servicesShown = false;
+    
+    // Hook into the chat component to know when step 4 finishes
+    const checkAndShowServices = () => {
+      if (servicesShown) return;
+      
       const lineText = container.querySelector('.line-text');
+      const btnNext = container.querySelector('.btn-next');
+      
       if (lineText) {
         const text = lineText.textContent || '';
-        if (text.includes("three amazing services") || text.includes("Choose one that interests you most")) {
-          return true;
+        // Only show if:
+        // 1. Text contains the final message
+        // 2. Next button is visible (meaning dialogue is complete and waiting)
+        // 3. User has had time to read it (wait a bit after Next appears)
+        if (text.includes("three amazing services") && 
+            text.includes("Choose one that interests you most")) {
+          
+          // Check if Next button is visible (dialogue finished)
+          if (btnNext && !btnNext.classList.contains('hidden')) {
+            // Wait a moment for user to see the message, then show options
+            setTimeout(() => {
+              if (!servicesShown) {
+                showServiceOptions();
+                servicesShown = true;
+              }
+            }, 2000);
+            return true;
+          }
         }
       }
       return false;
-    }
-
-    // Multiple ways to trigger service options
-    let servicesShown = false;
+    };
     
-    // Method 1: Monitor text changes in real-time
-    const observer = new MutationObserver(() => {
-      if (!servicesShown && checkStepAndShowServices()) {
-        setTimeout(() => {
-          showServiceOptions();
-          servicesShown = true;
-          observer.disconnect();
-        }, 1500);
-      }
-    });
-    
-    // Method 2: Check periodically after dialogue starts
+    // Monitor for when step 4 completes
     setTimeout(() => {
+      // Check periodically
       const checkInterval = setInterval(() => {
-        if (!servicesShown && checkStepAndShowServices()) {
-          setTimeout(() => {
-            showServiceOptions();
-            servicesShown = true;
-          }, 1500);
+        if (checkAndShowServices()) {
           clearInterval(checkInterval);
-          observer.disconnect();
         }
-      }, 500);
-
-      // Fallback: Force show after 10 seconds if not shown yet
+      }, 800);
+      
+      // Also listen for Next button becoming visible
+      const nextBtn = container.querySelector('.btn-next');
+      if (nextBtn) {
+        const nextObserver = new MutationObserver(() => {
+          checkAndShowServices();
+        });
+        nextObserver.observe(nextBtn, { 
+          attributes: true, 
+          attributeFilter: ['class'],
+          attributeOldValue: false
+        });
+      }
+      
+      // Watch text changes
+      const lineTextEl = container.querySelector('.line-text');
+      if (lineTextEl) {
+        const textObserver = new MutationObserver(() => {
+          checkAndShowServices();
+        });
+        textObserver.observe(lineTextEl, { 
+          childList: true, 
+          characterData: true, 
+          subtree: true 
+        });
+      }
+      
+      // Fallback after 20 seconds max
       setTimeout(() => {
         clearInterval(checkInterval);
-        observer.disconnect();
-        if (!servicesShown) {
-          console.log('Forcing service options to show (fallback)');
-          showServiceOptions();
-          servicesShown = true;
+        if (!servicesShown && checkAndShowServices()) {
+          // Already handled
         }
-      }, 10000);
-    }, 2000);
-
-    // Method 3: Watch for text changes in line-text element
-    const lineTextEl = container.querySelector('.line-text');
-    if (lineTextEl) {
-      observer.observe(lineTextEl, { 
-        childList: true, 
-        characterData: true, 
-        subtree: true 
-      });
-    }
-
-    // Method 4: Show on chat box click (after dialogue completes)
-    const chatBox = container.querySelector('.chat-box');
-    if (chatBox) {
-      let clickCount = 0;
-      const clickHandler = () => {
-        if (!servicesShown) {
-          clickCount++;
-          if (checkStepAndShowServices()) {
-            setTimeout(() => {
-              showServiceOptions();
-              servicesShown = true;
-            }, 500);
-            chatBox.removeEventListener('click', clickHandler);
-          } else if (clickCount >= 5) {
-            // After 5 clicks, force show (user likely finished dialogue)
-            setTimeout(() => {
-              showServiceOptions();
-              servicesShown = true;
-              chatBox.removeEventListener('click', clickHandler);
-            }, 500);
-          }
-        }
-      };
-      chatBox.addEventListener('click', clickHandler);
-    }
+      }, 20000);
+    }, 3000);
 
     // Close overlay when clicking outside (but not on the buttons)
     document.getElementById('overlay').addEventListener('click', (e) => {

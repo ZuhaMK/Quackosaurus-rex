@@ -2,10 +2,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap');
 .quack-chat{position:relative;height:100vh;font-family:'Pixelify Sans',sans-serif}
 .quack-chat .background{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("../assets/backgrounds/LivingRoom.jpeg") center/cover no-repeat}
-.quack-chat .stage{position:absolute;left:40px;bottom:200px;width:400px;height:600px;pointer-events:none;display:flex;align-items:flex-end}
+.quack-chat .stage{position:absolute;inset:40px 40px 200px 40px;pointer-events:none;display:flex;align-items:flex-end;justify-content:space-between}
 .quack-chat .avatar{width:400px;height:600px;background:none;color:transparent;display:flex;align-items:flex-end;justify-content:center;font-weight:700;border-radius:0;opacity:0;transform:translateY(30px);transition:opacity .45s ease, transform .45s ease;overflow:visible;position:absolute;bottom:0}
-.quack-chat .avatar.left{left:0}
-.quack-chat .avatar.right{left:0}
+.quack-chat .avatar.left{left:40px}
+.quack-chat .avatar.right{right:40px}
 .quack-chat .avatar.left{background-size: contain; background-repeat: no-repeat; background-position: center bottom;}
 .quack-chat .avatar.right{background-size: contain; background-repeat: no-repeat; background-position: center bottom;}
 .quack-chat .avatar.speaking{opacity:1;transform:translateY(0);box-shadow:none}
@@ -18,7 +18,7 @@
 
 .quack-chat .choices{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);display:none;flex-direction:column;gap:20px;z-index:1000}
 .quack-chat .choices.show{display:flex}
-.quack-chat .choice-btn{background:transparent;border:none;padding:0;cursor:pointer;position:relative;min-width:400px;min-height:80px;font-family:'Pixelify Sans',sans-serif;font-size:24px;font-weight:600;color:#000;display:flex;align-items:center;justify-content:center;background-size:contain;background-repeat:no-repeat;background-position:center}
+.quack-chat .choice-btn{background:transparent;border:none;padding:0;cursor:pointer;position:relative;min-width:500px;min-height:100px;font-family:'Pixelify Sans',sans-serif;font-size:22px;font-weight:600;color:#000;display:flex;align-items:center;justify-content:center;background-size:contain;background-repeat:no-repeat;background-position:center;text-align:center;line-height:1.2;padding:10px 20px;word-wrap:break-word}
 .quack-chat .hidden{display:none}
 
 /* Dropdown menu top-right */
