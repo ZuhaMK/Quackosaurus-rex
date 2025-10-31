@@ -125,9 +125,9 @@
           },
           {
             id: 'no',
-            text: 'Nah, unless you can give me some monners',
+            text: 'Nah, unless you can give me some money',
             next: 3,
-            feedback: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free monners, trust me! 🦖💸"
+            feedback: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free money, trust me! 🦖💸"
           }
         ]
       },
@@ -139,7 +139,7 @@
       {
         id: 3,
         speaker: 'robot',
-        text: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free monners, trust me!"
+        text: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free money, trust me! 🦖💸"
       },
       {
         id: 4,
@@ -245,6 +245,24 @@
       });
       
       // Also check periodically as backup
+    }
+
+    // Multiple ways to trigger service options
+    let servicesShown = false;
+
+    // Method 1: Monitor text changes in real-time
+    const observer = new MutationObserver(() => {
+      if (!servicesShown && checkStepAndShowServices()) {
+        setTimeout(() => {
+          showServiceOptions();
+          servicesShown = true;
+          observer.disconnect();
+        }, 1500);
+      }
+    });
+
+    // Method 2: Check periodically after dialogue starts
+    setTimeout(() => {
       const checkInterval = setInterval(() => {
         if (checkAndShowServices() || servicesShown) {
           clearInterval(checkInterval);
@@ -259,6 +277,42 @@
           // Already handled
         }
       }, 10000);
+    }, 2000);
+
+    // Method 3: Watch for text changes in line-text element
+    const lineTextEl = container.querySelector('.line-text');
+    if (lineTextEl) {
+      observer.observe(lineTextEl, {
+        childList: true,
+        characterData: true,
+        subtree: true
+      });
+    }
+
+    // Method 4: Show on chat box click (after dialogue completes)
+    const chatBox = container.querySelector('.chat-box');
+    if (chatBox) {
+      let clickCount = 0;
+      const clickHandler = () => {
+        if (!servicesShown) {
+          clickCount++;
+          if (checkStepAndShowServices()) {
+            setTimeout(() => {
+              showServiceOptions();
+              servicesShown = true;
+            }, 500);
+            chatBox.removeEventListener('click', clickHandler);
+          } else if (clickCount >= 5) {
+            // After 5 clicks, force show (user likely finished dialogue)
+            setTimeout(() => {
+              showServiceOptions();
+              servicesShown = true;
+              chatBox.removeEventListener('click', clickHandler);
+            }, 500);
+          }
+        }
+      };
+      chatBox.addEventListener('click', clickHandler);
     }
 
     // Close overlay when clicking outside (but not on the buttons)
