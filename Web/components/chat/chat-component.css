@@ -1,38 +1,40 @@
 /* Scoped chat component styles (prefix .quack-chat) */
 @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap');
-.quack-chat{position:relative;height:100vh;font-family:'Pixelify Sans',cursive}
+.quack-chat{position:relative;height:100vh;font-family:'Pixelify Sans',sans-serif}
 .quack-chat .background{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("../assets/backgrounds/LivingRoom.jpeg") center/cover no-repeat}
-.quack-chat .stage{position:absolute;left:40px;bottom:200px;width:400px;height:600px;pointer-events:none;display:flex;align-items:flex-end}
+.quack-chat .stage{position:absolute;inset:40px 40px 200px 40px;pointer-events:none;display:flex;align-items:flex-end;justify-content:space-between}
 .quack-chat .avatar{width:400px;height:600px;background:none;color:transparent;display:flex;align-items:flex-end;justify-content:center;font-weight:700;border-radius:0;opacity:0;transform:translateY(30px);transition:opacity .45s ease, transform .45s ease;overflow:visible;position:absolute;bottom:0}
-.quack-chat .avatar.left{left:0}
-.quack-chat .avatar.right{left:0}
+.quack-chat .avatar.left{left:40px}
+.quack-chat .avatar.right{right:40px}
 .quack-chat .avatar.left{background-size: contain; background-repeat: no-repeat; background-position: center bottom;}
 .quack-chat .avatar.right{background-size: contain; background-repeat: no-repeat; background-position: center bottom;}
 .quack-chat .avatar.speaking{opacity:1;transform:translateY(0);box-shadow:none}
 
-.quack-chat .chat-box{position:fixed;left:20px;right:20px;bottom:20px;background:rgba(0,0,0,0.85);border:3px solid #fff;padding:20px 30px;border-radius:15px;display:flex;flex-direction:row;align-items:center;gap:20px;min-height:120px}
+.quack-chat .chat-box{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:transparent;background-size:100% 100%;background-repeat:no-repeat;background-position:center;padding:25px 35px;border:none;border-radius:0;display:flex;flex-direction:row;align-items:center;gap:25px;min-height:160px;min-width:400px}
 .quack-chat .chat-controls{display:none}
-.quack-chat .line-area{flex:1;background:transparent;color:#fff;display:flex;flex-direction:column;gap:8px}
-.quack-chat .speaker-label{font-size:24px;color:#fff;font-weight:700;font-family:'Pixelify Sans',cursive}
-.quack-chat .line-text{font-size:28px;line-height:1.4;min-height:60px;font-family:'Pixelify Sans',cursive;font-weight:400}
+.quack-chat .line-area{flex:1;background:transparent;color:#000;display:flex;flex-direction:column;gap:8px}
+.quack-chat .speaker-label{font-size:32px;color:#000;font-weight:700;font-family:'Pixelify Sans',sans-serif}
+.quack-chat .line-text{font-size:36px;line-height:1.4;min-height:80px;font-family:'Pixelify Sans',sans-serif;font-weight:400;color:#000}
 
-.quack-chat .choices{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);display:none;flex-direction:column;gap:20px;z-index:1000}
+.quack-chat .choices-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;transition:opacity 0.3s ease}
+.quack-chat .choices{position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);display:none;flex-direction:column;gap:10px;z-index:1000}
 .quack-chat .choices.show{display:flex}
-.quack-chat .choice-btn{background:transparent;border:none;padding:0;cursor:pointer;position:relative;min-width:400px;min-height:80px;font-family:'Pixelify Sans',cursive;font-size:24px;font-weight:600;color:#000;display:flex;align-items:center;justify-content:center;background-size:contain;background-repeat:no-repeat;background-position:center}
+.quack-chat .choice-btn{background:transparent;border:none;padding:0;cursor:pointer;position:relative;font-family:'Pixelify Sans',sans-serif;font-size:32px;font-weight:600;color:#000;display:flex;align-items:center;justify-content:center;background-size:100% 100%;background-repeat:no-repeat;background-position:center;text-align:center;line-height:1.4;padding-top:50px;padding-bottom:90px;padding-left:100px;padding-right:100px;word-wrap:break-word;white-space:normal;min-height:180px;margin:0;box-sizing:border-box}
 .quack-chat .hidden{display:none}
 
 /* Dropdown menu top-right */
 .quack-chat .dropdown-menu{position:fixed;top:20px;right:20px;z-index:2000}
-.quack-chat .dropdown-toggle{background:rgba(0,0,0,0.7);border:2px solid #fff;color:#fff;padding:12px 20px;border-radius:8px;cursor:pointer;font-family:'Pixelify Sans',cursive;font-size:18px;font-weight:600}
+.quack-chat .dropdown-toggle{background:rgba(0,0,0,0.7);border:2px solid #fff;color:#fff;padding:12px 20px;border-radius:8px;cursor:pointer;font-family:'Pixelify Sans',sans-serif;font-size:18px;font-weight:600}
 .quack-chat .dropdown-content{display:none;position:absolute;right:0;top:100%;margin-top:10px;background:rgba(0,0,0,0.9);border:2px solid #fff;border-radius:8px;min-width:220px;overflow:hidden}
 .quack-chat .dropdown-content.show{display:block}
-.quack-chat .dropdown-item{display:block;padding:15px 20px;color:#fff;text-decoration:none;cursor:pointer;font-family:'Pixelify Sans',cursive;font-size:18px;font-weight:500;border-bottom:1px solid rgba(255,255,255,0.2);transition:background 0.2s}
+.quack-chat .dropdown-item{display:block;padding:15px 20px;color:#fff;text-decoration:none;cursor:pointer;font-family:'Pixelify Sans',sans-serif;font-size:18px;font-weight:500;border-bottom:1px solid rgba(255,255,255,0.2);transition:background 0.2s}
 .quack-chat .dropdown-item:last-child{border-bottom:none}
 .quack-chat .dropdown-item:hover{background:rgba(255,255,255,0.1)}
 
 /* Next button */
-.quack-chat .btn-next{background:rgba(255,255,255,0.9);color:#000;border:2px solid #fff;padding:15px 30px;border-radius:10px;cursor:pointer;font-family:'Pixelify Sans',cursive;font-size:22px;font-weight:700;margin-left:auto}
-.quack-chat .btn-next:hover{background:#fff;transform:scale(1.05)}
+.quack-chat .btn-next{background:transparent;border:none;padding:10px;cursor:pointer;margin-left:auto;display:flex;align-items:center;justify-content:center}
+.quack-chat .btn-next:hover{transform:scale(1.1)}
+.quack-chat .btn-next-arrow{width:60px;height:60px;object-fit:contain;display:block}
 
 .quack-chat .history-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center}
 .quack-chat .history-overlay.open{display:flex}
@@ -45,5 +47,5 @@
 .quack-chat .history-avatar{width:48px;height:48px;background:#fff;color:#000;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700}
 .quack-chat .history-bubble{max-width:70%;background:rgba(255,255,255,0.06);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)}
 
-@media(max-width:900px){.quack-chat .avatar{width:260px;height:340px}.quack-chat .avatar.left{margin-right:80px}.quack-chat .avatar.right{margin-left:80px}.quack-chat .chat-box{left:12px;right:12px}}
-@media(max-width:600px){.quack-chat .avatar{width:200px;height:280px}.quack-chat .avatar.left{margin-right:40px}.quack-chat .avatar.right{margin-left:40px}.quack-chat .chat-box{left:10px;right:10px}}
+@media(max-width:900px){.quack-chat .avatar{width:260px;height:340px}.quack-chat .avatar.left{margin-right:80px}.quack-chat .avatar.right{margin-left:80px}.quack-chat .chat-box{left:50%;transform:translateX(-50%);min-width:350px}}
+@media(max-width:600px){.quack-chat .avatar{width:200px;height:280px}.quack-chat .avatar.left{margin-right:40px}.quack-chat .avatar.right{margin-left:40px}.quack-chat .chat-box{left:50%;transform:translateX(-50%);min-width:300px}}

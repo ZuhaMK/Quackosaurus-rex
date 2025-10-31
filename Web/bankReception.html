@@ -28,32 +28,47 @@
       to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     }
     .service-btn {
-      padding: 1.5rem 2.5rem;
+      padding-top: 3rem;
+      padding-bottom: 5rem;
+      padding-left: 5rem;
+      padding-right: 5rem;
       font-size: 1.3rem;
       font-weight: 700;
       border: none;
       border-radius: 15px;
       cursor: pointer;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      box-shadow: none;
       transition: all 0.3s ease;
-      color: white;
+      color: #000;
       text-align: center;
+      background: transparent;
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-position: center;
+      min-width: 700px;
+      min-height: 240px;
+      font-family: 'Pixelify Sans', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
     }
     .service-btn:hover {
       transform: translateY(-5px) scale(1.05);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      box-shadow: none;
     }
     .service-btn:active {
       transform: translateY(-2px) scale(1.02);
     }
     .service-btn.savings {
-      background: linear-gradient(135deg, #FFD700, #FFA500);
+      background-image: url('./assets/bubbles/bubbleYellow.png');
     }
     .service-btn.credit {
-      background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+      background-image: url('./assets/bubbles/bubblePink.png');
     }
     .service-btn.consultant {
-      background: linear-gradient(135deg, #2196F3, #1976D2);
+      background-image: url('./assets/bubbles/bubbleBlue.PNG');
     }
     .overlay {
       position: fixed;
@@ -74,15 +89,15 @@
   <div class="overlay" id="overlay"></div>
   <div class="service-options" id="serviceOptions">
     <button class="service-btn savings" onclick="window.location.href='savings&budget.html'">
-      💰 Savings & Budgeting Room<br>
+      Savings & Budgeting Room<br>
       <small style="font-size: 0.9rem; opacity: 0.9;">Learn to save like a pro and budget like a boss!</small>
     </button>
     <button class="service-btn credit" onclick="window.location.href='credit&debt.html'">
-      💳 Credit & Debt Room<br>
+      Credit & Debt Room<br>
       <small style="font-size: 0.9rem; opacity: 0.9;">Master credit scores and crush that debt!</small>
     </button>
     <button class="service-btn consultant" onclick="window.location.href='chat.html'">
-      🤖 Dr. GPT Financial Consultant<br>
+      Dr. Ka-ching<br>
       <small style="font-size: 0.9rem; opacity: 0.9;">Get personalized advice from our AI financial expert!</small>
     </button>
   </div>
@@ -106,7 +121,7 @@
             id: 'yes',
             text: 'YES PLEASE HELP!!!',
             next: 2,
-            feedback: "Fantastic enthusiasm! I love that energy! 💪 Let's get you on the right financial track!"
+            feedback: "Fantastic enthusiasm! I love that energy! Let's get you on the right financial track!"
           },
           {
             id: 'no',
@@ -119,7 +134,7 @@
       {
         id: 2,
         speaker: 'robot',
-        text: "Fantastic enthusiasm! I love that energy! 💪 Let's get you on the right financial track!"
+        text: "Fantastic enthusiasm! I love that energy! Let's get you on the right financial track!"
       },
       {
         id: 3,
@@ -172,16 +187,64 @@
       }
     }
 
-    // Check if we should show service options
-    function checkStepAndShowServices() {
+    // Show service options AFTER step 4 (final dialogue) completes typing
+    let servicesShown = false;
+    
+    // Hook into the chat component to know when step 4 finishes
+    const checkAndShowServices = () => {
+      if (servicesShown) return false;
+      
       const lineText = container.querySelector('.line-text');
-      if (lineText) {
-        const text = lineText.textContent || '';
-        if (text.includes("three amazing services") || text.includes("Choose one that interests you most")) {
-          return true;
+      if (!lineText) return false;
+      
+      const text = lineText.textContent || '';
+      
+      // Check if step 4 text is displayed (this is the final step with service options message)
+      if (text.includes("three amazing services") && 
+          text.includes("Choose one that interests you most")) {
+        
+        // Check if text is complete (not typing) by comparing length
+        // Step 4 text is: "Alright, let's get you sorted! We have three amazing services that will turn your financial life around. Choose one that interests you most:"
+        const expectedText = "Alright, let's get you sorted! We have three amazing services that will turn your financial life around. Choose one that interests you most:";
+        
+        // If text matches or is close to complete, and we haven't shown yet
+        if (text.trim().length >= expectedText.length * 0.9) {
+          // Wait a moment for user to see the message, then show options
+          if (!servicesShown) {
+            setTimeout(() => {
+              if (!servicesShown) {
+                showServiceOptions();
+                servicesShown = true;
+              }
+            }, 1500);
+            return true;
+          }
         }
       }
       return false;
+    };
+    
+    // Start monitoring immediately
+    // Watch text changes in the line-text element
+    const lineTextEl = container.querySelector('.line-text');
+    if (lineTextEl) {
+      let lastText = '';
+      const textObserver = new MutationObserver(() => {
+        const currentText = lineTextEl.textContent || '';
+        // Only check when text actually changes
+        if (currentText !== lastText) {
+          lastText = currentText;
+          checkAndShowServices();
+        }
+      });
+      
+      textObserver.observe(lineTextEl, { 
+        childList: true, 
+        characterData: true, 
+        subtree: true 
+      });
+      
+      // Also check periodically as backup
     }
 
     // Multiple ways to trigger service options
@@ -201,24 +264,17 @@
     // Method 2: Check periodically after dialogue starts
     setTimeout(() => {
       const checkInterval = setInterval(() => {
-        if (!servicesShown && checkStepAndShowServices()) {
-          setTimeout(() => {
-            showServiceOptions();
-            servicesShown = true;
-          }, 1500);
+        if (checkAndShowServices() || servicesShown) {
           clearInterval(checkInterval);
-          observer.disconnect();
+          textObserver.disconnect();
         }
       }, 500);
-
-      // Fallback: Force show after 10 seconds if not shown yet
+      
+      // Fallback: Force show after 10 seconds if step 4 text is present
       setTimeout(() => {
         clearInterval(checkInterval);
-        observer.disconnect();
-        if (!servicesShown) {
-          console.log('Forcing service options to show (fallback)');
-          showServiceOptions();
-          servicesShown = true;
+        if (!servicesShown && checkAndShowServices()) {
+          // Already handled
         }
       }, 10000);
     }, 2000);

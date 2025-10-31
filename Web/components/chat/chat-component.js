@@ -33,9 +33,12 @@ export function mountChat(containerSelector, options = {}){
         <div class="speaker-label">&nbsp;</div>
         <div class="line-text" aria-live="polite"></div>
       </div>
-      <button class="btn-next hidden">Next →</button>
+      <button class="btn-next hidden">
+        <img src="${(options.assetsPath || './assets')}/arrows/rightArrow.png" alt="Next" class="btn-next-arrow" />
+      </button>
     </div>
 
+    <div class="choices-overlay hidden"></div>
     <div class="choices hidden"></div>
 
     <div class="history-overlay hidden" role="dialog" aria-modal="true">
@@ -55,6 +58,7 @@ export function mountChat(containerSelector, options = {}){
   const lineText = qs('.line-text');
   const btnNext = qs('.btn-next');
   const choicesEl = qs('.choices');
+  const choicesOverlay = qs('.choices-overlay');
   const historyOverlay = qs('.history-overlay');
   const historyList = qs('.history-list');
   const historyClose = qs('.history-close');
@@ -82,6 +86,7 @@ export function mountChat(containerSelector, options = {}){
   // state
   let index = 0; let history = []; let isTyping = false;
   let waitingForClick = false;
+  let waitingForChoiceClick = false; // New: tracks if we're waiting for click to show choices
   let currentStepText = '';
 
   // audio - using animalese.js
@@ -203,7 +208,7 @@ export function mountChat(containerSelector, options = {}){
     return candidates[0]; // fallback
   }
 
-  // apply resolved asset paths to elements (background + avatars)
+  // apply resolved asset paths to elements (background + avatars + chat box)
   (async function applyAssets(){
     const base = options.assetsPath || await resolveAssetsBase();
     // set background
@@ -212,12 +217,53 @@ export function mountChat(containerSelector, options = {}){
     // set avatars
     if(avatarLeft) avatarLeft.style.backgroundImage = `url('${base.replace(/\/$/,'')}/characters/robot.GIF')`;
     if(avatarRight) avatarRight.style.backgroundImage = `url('${base.replace(/\/$/,'')}/characters/duckFlip.GIF')`;
+    // set chat box background
+    const chatBox = container.querySelector('.chat-box');
+    if(chatBox) chatBox.style.backgroundImage = `url('${base.replace(/\/$/,'')}/textBox/textBox.png')`;
   })();
 
+  // Function to update chat box width based on text content (4x change rate)
+  function updateChatBoxWidth(text) {
+    const chatBox = container.querySelector('.chat-box');
+    if (!chatBox || !text) return;
+    
+    // Create temporary element to measure text width
+    const tempMeasure = document.createElement('div');
+    tempMeasure.style.position = 'absolute';
+    tempMeasure.style.visibility = 'hidden';
+    tempMeasure.style.fontFamily = '"Pixelify Sans", sans-serif';
+    tempMeasure.style.fontSize = '36px'; // Same as line-text
+    tempMeasure.style.fontWeight = '400';
+    tempMeasure.style.whiteSpace = 'pre-wrap';
+    tempMeasure.style.wordWrap = 'break-word';
+    tempMeasure.style.maxWidth = 'calc(100vw - 120px)'; // Account for padding and margins
+    tempMeasure.style.width = 'auto';
+    tempMeasure.textContent = text;
+    document.body.appendChild(tempMeasure);
+    
+    // Measure the actual width needed
+    const textWidth = tempMeasure.offsetWidth;
+    document.body.removeChild(tempMeasure);
+    
+    // Calculate chat box width with 4x change rate (multiply by 4 for responsiveness)
+    // Add padding (35px each side = 70px) + gap for next button (25px) + next button width (60px + 20px padding) = ~175px
+    // Then multiply by 4 for 4x change rate
+    const calculatedWidth = Math.max((textWidth * 4) + 175, 400); // Minimum 400px
+    const maxWidth = window.innerWidth - 40; // Leave 20px margin on each side
+    
+    chatBox.style.width = `${Math.min(calculatedWidth, maxWidth)}px`;
+    chatBox.style.left = '50%';
+    chatBox.style.right = 'auto';
+    chatBox.style.transform = 'translateX(-50%)';
+  }
+  
   async function typeLine(text){ 
     isTyping = true; 
     if(!lineText) return; 
     lineText.textContent = '';
+    
+    // Update chat box width based on text (4x change rate)
+    updateChatBoxWidth(text);
     
     // Start playing animalese audio for the full text
     playLineAudio(text);
@@ -228,6 +274,7 @@ export function mountChat(containerSelector, options = {}){
       if (!isTyping) {
         // User clicked, show full text immediately
         lineText.textContent = text;
+        updateChatBoxWidth(text); // Update width when skipping
         break;
       }
       lineText.textContent += text[i]; 
@@ -237,6 +284,7 @@ export function mountChat(containerSelector, options = {}){
     // Ensure full text is shown
     if (lineText) {
       lineText.textContent = text;
+      updateChatBoxWidth(text); // Final width update
     }
     
     isTyping = false; 
@@ -252,22 +300,37 @@ export function mountChat(containerSelector, options = {}){
     // prepare current text (used for click-to-complete)
     currentStepText = step.text || '';
     showAvatar(step.speaker); hideAvatar(step.speaker==='robot'?'duck':'robot');
+    
+    // Hide choices and overlay when starting a new step
+    if(choicesEl) {
+      choicesEl.classList.add('hidden');
+      choicesEl.classList.remove('show');
+    }
+    if(choicesOverlay) {
+      choicesOverlay.classList.add('hidden');
+    }
+    
     // Hide Next button initially (will show after typing completes if needed)
     if(btnNext) btnNext.classList.add('hidden');
+    waitingForChoiceClick = false;
+    waitingForClick = false;
 
     // type the text (user can click during typing to finish immediately)
     await typeLine(step.text);
     // Animalese is already playing from typeLine, no need to call again
     appendHistory({speaker:step.speaker, text:step.text});
 
-    // show choices if present; if not, enable click-to-continue
+    // Handle choices vs. regular dialogue
     if(step.choices){
-      showChoices(step.choices);
+      // Don't show choices yet - wait for user to click text box
+      waitingForChoiceClick = true;
       waitingForClick = false;
       if(btnNext) btnNext.classList.add('hidden');
     } else {
+      // No choices - enable click-to-continue
       choicesEl.classList.add('hidden');
       choicesEl.classList.remove('show');
+      if(choicesOverlay) choicesOverlay.classList.add('hidden');
       // Always wait for user click to continue (no auto-advance)
       if(index < DIALOG.length-1){
         waitingForClick = true;
@@ -278,7 +341,7 @@ export function mountChat(containerSelector, options = {}){
       }
     }
 
-    // after some delay, fade out avatar (unless choices are shown)
+    // after some delay, fade out avatar (unless choices will be shown)
     if(!step.choices){
       setTimeout(()=>hideAvatar(step.speaker), 900);
     }
@@ -289,7 +352,69 @@ export function mountChat(containerSelector, options = {}){
     choicesEl.innerHTML='';
     const bubbleAssets = ['bubblePink.png', 'bubbleYellow.png', 'bubbleBlue.PNG'];
     const tabAssets = ['tabPink.png', 'tabYellow.png', 'tabBlue.png', 'tabGreen.png'];
+    
+    // Show overlay first (darken screen)
+    if(choicesOverlay) {
+      choicesOverlay.classList.remove('hidden');
+    }
+    
+    // Create a temporary container for measuring text
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.visibility = 'hidden';
+    tempContainer.style.fontFamily = '"Pixelify Sans", sans-serif';
+    tempContainer.style.fontSize = '32px';
+    tempContainer.style.fontWeight = '600';
+    document.body.appendChild(tempContainer);
+    
+    // Create each button with its own dynamic size based on its text
     choices.forEach((c, idx)=>{
+      // Measure this specific button's text
+      // First, measure without width constraint to see natural single-line width
+      const tempTextUnconstrained = document.createElement('div');
+      tempTextUnconstrained.textContent = c.text;
+      tempTextUnconstrained.style.display = 'inline-block';
+      tempTextUnconstrained.style.whiteSpace = 'nowrap';
+      tempTextUnconstrained.style.fontFamily = '"Pixelify Sans", sans-serif';
+      tempTextUnconstrained.style.fontSize = '32px';
+      tempTextUnconstrained.style.fontWeight = '600';
+      tempContainer.appendChild(tempTextUnconstrained);
+      
+      const naturalWidth = tempTextUnconstrained.offsetWidth;
+      tempContainer.removeChild(tempTextUnconstrained);
+      
+      // Now measure with wrapping enabled (allowing multi-line)
+      const tempText = document.createElement('div');
+      tempText.textContent = c.text;
+      tempText.style.display = 'block';
+      tempText.style.maxWidth = '1200px'; // Max width before wrapping
+      tempText.style.width = 'auto';
+      tempText.style.wordWrap = 'break-word';
+      tempText.style.whiteSpace = 'normal';
+      tempText.style.fontFamily = '"Pixelify Sans", sans-serif';
+      tempText.style.fontSize = '32px';
+      tempText.style.fontWeight = '600';
+      tempText.style.lineHeight = '1.4';
+      tempContainer.appendChild(tempText);
+      
+      // Measure actual width and height for THIS button's text (with wrapping allowed)
+      const wrappedWidth = tempText.offsetWidth;
+      const textHeight = tempText.offsetHeight;
+      
+      tempContainer.removeChild(tempText);
+      
+      // Determine button width:
+      // - If text fits in one line (natural width <= 1200px), use natural width
+      // - If text wraps (natural width > 1200px), use the wrapped width (actual width after wrapping)
+      // - Always ensure minimum width of 600px
+      const actualTextWidth = naturalWidth <= 1200 ? naturalWidth : Math.max(wrappedWidth, 1200);
+      
+      // Calculate button size: doubled change rate - reduced padding (50px each side = 100px total, 50px top + 90px bottom = 140px total)
+      // Reduced padding from 200px to 100px to make buttons 2x more responsive to text width changes
+      const buttonWidth = Math.max(actualTextWidth + 100, 600);
+      const buttonHeight = Math.max(textHeight + 140, 180);
+      
+      // Create the button
       const b = document.createElement('button');
       b.className='choice-btn';
       b.textContent=c.text;
@@ -298,15 +423,42 @@ export function mountChat(containerSelector, options = {}){
       const assetIndex = idx % tabAssets.length;
       const assetPath = options.assetsPath ? `${options.assetsPath}/tabs/${tabAssets[assetIndex]}` : `./assets/tabs/${tabAssets[assetIndex]}`;
       b.style.backgroundImage = `url('${assetPath}')`;
+      // Set individual width and height based on THIS button's text
+      b.style.width = `${buttonWidth}px`;
+      b.style.height = `${buttonHeight}px`;
+      b.style.minHeight = `${buttonHeight}px`;
+      // Remove any margin/padding that might cause larger clickable area
+      b.style.margin = '0';
+      b.style.overflow = 'visible';
       choicesEl.appendChild(b);
     });
+    
+    document.body.removeChild(tempContainer);
+    
     choicesEl.classList.remove('hidden');
     choicesEl.classList.add('show');
     // Hide Next button when choices are shown
     if(btnNext) btnNext.classList.add('hidden');
+    waitingForChoiceClick = false;
   }
 
-  function handleChoice(choice){ appendHistory({speaker:'duck', text:choice.text}); renderInlineDuckLine(choice.text); setTimeout(()=>{ if(choice.feedback) renderStepFromInline({speaker:'robot', text:choice.feedback, then:choice.next}); else renderStep(choice.next); }, 700); }
+  function handleChoice(choice){ 
+    // Hide choices and overlay when choice is made
+    if(choicesEl) {
+      choicesEl.classList.add('hidden');
+      choicesEl.classList.remove('show');
+    }
+    if(choicesOverlay) {
+      choicesOverlay.classList.add('hidden');
+    }
+    
+    appendHistory({speaker:'duck', text:choice.text}); 
+    renderInlineDuckLine(choice.text); 
+    setTimeout(()=>{ 
+      if(choice.feedback) renderStepFromInline({speaker:'robot', text:choice.feedback, then:choice.next}); 
+      else renderStep(choice.next); 
+    }, 700); 
+  }
 
   async function renderInlineDuckLine(text){ showAvatar('duck'); const speakerNames = options.speakerNames || {}; if(speakerLabel) speakerLabel.textContent = speakerNames.duck || 'You'; await typeLine(text); setTimeout(()=>hideAvatar('duck'), 500); }
 
@@ -390,7 +542,16 @@ export function mountChat(containerSelector, options = {}){
         return; // Don't advance to next step yet
       }
 
-      // Second click: if waiting for click to continue (no choices shown), advance to next step
+      // Second click: if waiting for choices to be shown (question fully displayed)
+      if(waitingForChoiceClick){
+        const step = DIALOG[index];
+        if(step && step.choices){
+          showChoices(step.choices);
+          return;
+        }
+      }
+
+      // Second click: if waiting for click to continue (no choices), advance to next step
       if(waitingForClick){
         waitingForClick = false;
         if(index < DIALOG.length-1){
