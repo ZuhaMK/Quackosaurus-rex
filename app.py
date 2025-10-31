@@ -1,11 +1,16 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
 from openai import OpenAI
 from dotenv import load_dotenv
+from pathlib import Path
 import os
 
 load_dotenv()
 
-app = Flask(__name__)
+BASE_DIR = Path(__file__).resolve().parent
+TEMPLATES_DIR = BASE_DIR / "finance-duck-advice" / "Web"
+
+app = Flask(__name__, template_folder="Web")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # ---- System prompt (style & guardrails) ----
@@ -27,38 +32,41 @@ chat_history = [
 def append(role: str, content: str):
     chat_history.append({"role": role, "content": content})
 
+@app.route("/")
+def home():
+    return render_template("chat.html")
+
 @app.route("/chat", methods=["POST"])   # <-- decorator was missing
 def chat():
     data = request.get_json(force=True) or {}
     user_message = data.get("message", "").strip()
     reset = data.get("reset", False)
 
-    try:
-        # Optional: reset the conversation (keeps only the system message)
-        if reset:
-            chat_history.clear()
-            chat_history.append({"role": "system", "content": SYSTEM_PROMPT})
+    # Optional: reset the conversation (keeps only the system message)
+    if reset:
+        chat_history.clear()
+        chat_history.append({"role": "system", "content": SYSTEM_PROMPT})
 
-        if not user_message:
-            return jsonify({"error": "Empty message"}), 400
+    if not user_message:
+        return jsonify({"error": "Empty message"}), 400
 
-        append("user", user_message)
+    append("user", user_message)
 
         # ---- Call the Responses API (consistent, modern endpoint) ----
-        response = client.responses.create(
-            model="gpt-5",   # use a valid model
-            input=chat_history
-        )
+    response = client.responses.create(
+        model="gpt-5",   # use a valid model
+        input=chat_history
+    )
 
-        reply = response.output_text or "Sorry, I couldn't generate a response."
-        append("assistant", reply)
+    reply = response.output_text or "Sorry, I couldn't generate a response."
+    append("assistant", reply)
 
-        return jsonify({"reply": reply})
+    return jsonify({"reply": reply})
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    # except Exception as e:
+    #     return jsonify({"error": str(e)}), 500
 
-@app.route("/reset", methods=["POST"])
+@app.route("/reset_api", methods=["POST"])
 def reset():
     chat_history.clear()
     chat_history.append({"role": "system", "content": SYSTEM_PROMPT})
