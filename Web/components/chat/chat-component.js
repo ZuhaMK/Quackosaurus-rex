@@ -292,22 +292,47 @@ export function mountChat(containerSelector, options = {}){
     const bubbleAssets = ['bubblePink.png', 'bubbleYellow.png', 'bubbleBlue.PNG'];
     const tabAssets = ['tabPink.png', 'tabYellow.png', 'tabBlue.png', 'tabGreen.png'];
     
-    // First, find the longest text to determine button width
-    // Use a canvas to measure text width accurately
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    context.font = '600 32px "Pixelify Sans", sans-serif'; // Match the button font
+    // First, find the longest text to determine button width AND height needed
+    // Use temporary elements to measure actual rendered size
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.visibility = 'hidden';
+    tempContainer.style.fontFamily = '"Pixelify Sans", sans-serif';
+    tempContainer.style.fontSize = '32px';
+    tempContainer.style.fontWeight = '600';
+    tempContainer.style.padding = '30px 40px';
+    tempContainer.style.wordWrap = 'break-word';
+    tempContainer.style.whiteSpace = 'normal';
+    tempContainer.style.width = '700px'; // Start with min width
+    document.body.appendChild(tempContainer);
     
     let maxTextWidth = 0;
+    let maxTextHeight = 0;
+    
     choices.forEach((c) => {
-      const textWidth = context.measureText(c.text).width;
-      if(textWidth > maxTextWidth) maxTextWidth = textWidth;
+      const tempText = document.createElement('div');
+      tempText.textContent = c.text;
+      tempText.style.width = 'auto';
+      tempText.style.display = 'inline-block';
+      tempContainer.appendChild(tempText);
+      
+      // Measure actual width and height
+      const width = tempText.offsetWidth;
+      const height = tempText.offsetHeight;
+      if(width > maxTextWidth) maxTextWidth = width;
+      if(height > maxTextHeight) maxTextHeight = height;
+      
+      tempContainer.removeChild(tempText);
     });
     
-    // Add padding (80px on each side = 160px total) and ensure minimum width
-    const buttonWidth = Math.max(maxTextWidth + 160, 700); // Add padding, min 700px
+    document.body.removeChild(tempContainer);
     
-    // Now create the actual buttons with consistent width
+    // Add padding (80px on each side = 160px total) and ensure minimum width
+    const buttonWidth = Math.max(maxTextWidth + 160, 700);
+    // Add vertical padding (60px top + 60px bottom = 120px total) and ensure minimum height
+    const buttonHeight = Math.max(maxTextHeight + 120, 180);
+    
+    // Now create the actual buttons with consistent width and adequate height
     choices.forEach((c, idx)=>{
       const b = document.createElement('button');
       b.className='choice-btn';
@@ -317,9 +342,10 @@ export function mountChat(containerSelector, options = {}){
       const assetIndex = idx % tabAssets.length;
       const assetPath = options.assetsPath ? `${options.assetsPath}/tabs/${tabAssets[assetIndex]}` : `./assets/tabs/${tabAssets[assetIndex]}`;
       b.style.backgroundImage = `url('${assetPath}')`;
-      // Set consistent width for all buttons based on longest text
+      // Set consistent width and height for all buttons based on content
       b.style.width = `${buttonWidth}px`;
-      b.style.minHeight = '140px';
+      b.style.height = `${buttonHeight}px`;
+      b.style.minHeight = `${buttonHeight}px`;
       choicesEl.appendChild(b);
     });
     choicesEl.classList.remove('hidden');
