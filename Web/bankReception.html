@@ -38,7 +38,7 @@
       border-radius: 15px;
       cursor: pointer;
       box-shadow: none;
-      transition: all 0.3s ease;
+      transition: transform 0.2s ease, filter 0.2s ease;
       color: #000;
       text-align: center;
       background: transparent;
@@ -56,10 +56,12 @@
     }
     .service-btn:hover {
       transform: translateY(-5px) scale(1.05);
+      filter: brightness(1.1);
       box-shadow: none;
     }
     .service-btn:active {
-      transform: translateY(-2px) scale(1.02);
+      transform: translateY(-2px) scale(0.98);
+      filter: brightness(0.95);
     }
     .service-btn.savings {
       background-image: url('./assets/bubbles/bubbleYellow.png');
@@ -88,15 +90,15 @@
   <!-- Service Options Overlay -->
   <div class="overlay" id="overlay"></div>
   <div class="service-options" id="serviceOptions">
-    <button class="service-btn savings" onclick="window.location.href='savings&budget.html'">
+    <button class="service-btn savings" id="savingsBtn">
       Savings & Budgeting Room<br>
       <small style="font-size: 0.9rem; opacity: 0.9;">Learn to save like a pro and budget like a boss!</small>
     </button>
-    <button class="service-btn credit" onclick="window.location.href='credit&debt.html'">
+    <button class="service-btn credit" id="creditBtn">
       Credit & Debt Room<br>
       <small style="font-size: 0.9rem; opacity: 0.9;">Master credit scores and crush that debt!</small>
     </button>
-    <button class="service-btn consultant" onclick="window.location.href='chat.html'">
+    <button class="service-btn consultant" id="consultantBtn">
       Dr. Ka-ching<br>
       <small style="font-size: 0.9rem; opacity: 0.9;">Get personalized advice from our AI financial expert!</small>
     </button>
@@ -266,6 +268,94 @@
       if (e.target.id === 'overlay') {
         hideServiceOptions();
       }
+    });
+
+    // Button sound effects using Web Audio API
+    let audioContext = null;
+    
+    function initAudioContext() {
+      if (!audioContext) {
+        try {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+          console.debug('Audio context initialization failed:', e);
+          return null;
+        }
+      }
+      // Resume audio context if suspended (required for user interaction)
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      return audioContext;
+    }
+    
+    function playButtonHoverSound() {
+      try {
+        const ctx = initAudioContext();
+        if (!ctx) return;
+        
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        // Higher pitch, short sound for hover
+        oscillator.frequency.value = 600;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.1);
+      } catch (e) {
+        console.debug('Button hover sound unavailable:', e);
+      }
+    }
+    
+    function playButtonClickSound() {
+      try {
+        const ctx = initAudioContext();
+        if (!ctx) return;
+        
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        // Lower pitch, slightly longer sound for click
+        oscillator.frequency.value = 400;
+        oscillator.type = 'square';
+        
+        gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.15);
+      } catch (e) {
+        console.debug('Button click sound unavailable:', e);
+      }
+    }
+
+    // Add hover and click sound effects to service buttons
+    document.getElementById('savingsBtn').addEventListener('mouseenter', playButtonHoverSound);
+    document.getElementById('savingsBtn').addEventListener('click', (e) => {
+      playButtonClickSound();
+      setTimeout(() => window.location.href = 'savings&budget.html', 150);
+    });
+    
+    document.getElementById('creditBtn').addEventListener('mouseenter', playButtonHoverSound);
+    document.getElementById('creditBtn').addEventListener('click', (e) => {
+      playButtonClickSound();
+      setTimeout(() => window.location.href = 'credit&debt.html', 150);
+    });
+    
+    document.getElementById('consultantBtn').addEventListener('mouseenter', playButtonHoverSound);
+    document.getElementById('consultantBtn').addEventListener('click', (e) => {
+      playButtonClickSound();
+      setTimeout(() => window.location.href = 'chat.html', 150);
     });
   </script>
 </body>

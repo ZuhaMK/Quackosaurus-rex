@@ -92,6 +92,77 @@ export function mountChat(containerSelector, options = {}){
   // audio - using animalese.js
   let currentAnimaleseAudio = null;
   
+  // Button sound effects using Web Audio API
+  let audioContext = null;
+  
+  function initAudioContext() {
+    if (!audioContext) {
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        console.debug('Audio context initialization failed:', e);
+        return null;
+      }
+    }
+    // Resume audio context if suspended (required for user interaction)
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+    return audioContext;
+  }
+  
+  function playButtonHoverSound() {
+    try {
+      const ctx = initAudioContext();
+      if (!ctx) return;
+      
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      // Higher pitch, short sound for hover
+      oscillator.frequency.value = 600;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.1);
+    } catch (e) {
+      // Silent fail if audio context not available
+      console.debug('Button hover sound unavailable:', e);
+    }
+  }
+  
+  function playButtonClickSound() {
+    try {
+      const ctx = initAudioContext();
+      if (!ctx) return;
+      
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      // Lower pitch, slightly longer sound for click
+      oscillator.frequency.value = 400;
+      oscillator.type = 'square';
+      
+      gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+      
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.15);
+    } catch (e) {
+      // Silent fail if audio context not available
+      console.debug('Button click sound unavailable:', e);
+    }
+  }
+  
   async function loadAnimalese() {
     // Check if animalese is already loaded
     if (window.animalese) {
@@ -430,7 +501,16 @@ export function mountChat(containerSelector, options = {}){
       const b = document.createElement('button');
       b.className='choice-btn';
       b.textContent=c.text;
-      b.onclick=()=>handleChoice(c);
+      
+      // Add hover sound effect
+      b.addEventListener('mouseenter', () => playButtonHoverSound());
+      
+      // Add click handler with sound effect
+      b.addEventListener('click', (e) => {
+        playButtonClickSound();
+        handleChoice(c);
+      });
+      
       // Use tab assets for choices, cycle through them
       const assetIndex = idx % tabAssets.length;
       const assetPath = options.assetsPath ? `${options.assetsPath}/tabs/${tabAssets[assetIndex]}` : `./assets/tabs/${tabAssets[assetIndex]}`;
@@ -439,6 +519,10 @@ export function mountChat(containerSelector, options = {}){
       b.style.width = `${buttonWidth}px`;
       b.style.height = `${buttonHeight}px`;
       b.style.minHeight = `${buttonHeight}px`;
+      // Ensure text is centered - flex properties already set in CSS
+      b.style.display = 'flex';
+      b.style.alignItems = 'center';
+      b.style.justifyContent = 'center';
       // Remove any margin/padding that might cause larger clickable area
       b.style.margin = '0';
       b.style.overflow = 'visible';
