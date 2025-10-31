@@ -300,7 +300,10 @@ export function mountChat(containerSelector, options = {}){
     tempContainer.style.fontFamily = '"Pixelify Sans", sans-serif';
     tempContainer.style.fontSize = '32px';
     tempContainer.style.fontWeight = '600';
-    tempContainer.style.padding = '30px 40px';
+    tempContainer.style.paddingTop = '50px';
+    tempContainer.style.paddingBottom = '90px';
+    tempContainer.style.paddingLeft = '100px';
+    tempContainer.style.paddingRight = '100px';
     tempContainer.style.wordWrap = 'break-word';
     tempContainer.style.whiteSpace = 'normal';
     tempContainer.style.width = '700px'; // Start with min width
@@ -327,10 +330,10 @@ export function mountChat(containerSelector, options = {}){
     
     document.body.removeChild(tempContainer);
     
-    // Add padding (80px on each side = 160px total) and ensure minimum width
-    const buttonWidth = Math.max(maxTextWidth + 160, 700);
-    // Add vertical padding (60px top + 60px bottom = 120px total) and ensure minimum height
-    const buttonHeight = Math.max(maxTextHeight + 120, 180);
+    // Add extra horizontal padding to make buttons wider (100px on each side = 200px total)
+    const buttonWidth = Math.max(maxTextWidth + 200, 800);
+    // Add asymmetric vertical padding (50px top + 90px bottom = 140px total) for better visual centering
+    const buttonHeight = Math.max(maxTextHeight + 140, 200);
     
     // Now create the actual buttons with consistent width and adequate height
     choices.forEach((c, idx)=>{
