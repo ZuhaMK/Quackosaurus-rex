@@ -92,6 +92,77 @@ export function mountChat(containerSelector, options = {}){
   // audio - using animalese.js
   let currentAnimaleseAudio = null;
   
+  // Button sound effects using Web Audio API
+  let audioContext = null;
+  
+  function initAudioContext() {
+    if (!audioContext) {
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        console.debug('Audio context initialization failed:', e);
+        return null;
+      }
+    }
+    // Resume audio context if suspended (required for user interaction)
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+    return audioContext;
+  }
+  
+  function playButtonHoverSound() {
+    try {
+      const ctx = initAudioContext();
+      if (!ctx) return;
+      
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      // Higher pitch, short sound for hover
+      oscillator.frequency.value = 600;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.1);
+    } catch (e) {
+      // Silent fail if audio context not available
+      console.debug('Button hover sound unavailable:', e);
+    }
+  }
+  
+  function playButtonClickSound() {
+    try {
+      const ctx = initAudioContext();
+      if (!ctx) return;
+      
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      // Lower pitch, slightly longer sound for click
+      oscillator.frequency.value = 400;
+      oscillator.type = 'square';
+      
+      gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+      
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.15);
+    } catch (e) {
+      // Silent fail if audio context not available
+      console.debug('Button click sound unavailable:', e);
+    }
+  }
+  
   async function loadAnimalese() {
     // Check if animalese is already loaded
     if (window.animalese) {
@@ -220,38 +291,65 @@ export function mountChat(containerSelector, options = {}){
     // set chat box background
     const chatBox = container.querySelector('.chat-box');
     if(chatBox) chatBox.style.backgroundImage = `url('${base.replace(/\/$/,'')}/textBox/textBox.png')`;
+    
+    // set dropdown toggle button background
+    const dropdownToggle = container.querySelector('.dropdown-toggle');
+    if(dropdownToggle) {
+      dropdownToggle.style.backgroundImage = `url('${base.replace(/\/$/,'')}/buttons/buttonMedium.PNG')`;
+    }
   })();
 
-  // Function to update chat box width based on text content (4x change rate)
-  function updateChatBoxWidth(text) {
+  // Function to update chat box width and height based on text content
+  function updateChatBoxSize(text) {
     const chatBox = container.querySelector('.chat-box');
     if (!chatBox || !text) return;
     
-    // Create temporary element to measure text width
+    // Create temporary element to measure text dimensions
     const tempMeasure = document.createElement('div');
     tempMeasure.style.position = 'absolute';
     tempMeasure.style.visibility = 'hidden';
     tempMeasure.style.fontFamily = '"Pixelify Sans", sans-serif';
     tempMeasure.style.fontSize = '36px'; // Same as line-text
     tempMeasure.style.fontWeight = '400';
+    tempMeasure.style.lineHeight = '1.4';
     tempMeasure.style.whiteSpace = 'pre-wrap';
     tempMeasure.style.wordWrap = 'break-word';
-    tempMeasure.style.maxWidth = 'calc(100vw - 120px)'; // Account for padding and margins
+    
+    // Set a reasonable max width for text wrapping (80% of screen width)
+    const maxTextWidth = Math.min(window.innerWidth * 0.8, 1200);
+    tempMeasure.style.maxWidth = `${maxTextWidth - 140}px`; // Account for padding and button space
     tempMeasure.style.width = 'auto';
     tempMeasure.textContent = text;
     document.body.appendChild(tempMeasure);
     
-    // Measure the actual width needed
+    // Measure the actual dimensions needed
     const textWidth = tempMeasure.offsetWidth;
+    const textHeight = tempMeasure.offsetHeight;
     document.body.removeChild(tempMeasure);
     
-    // Calculate chat box width with 4x change rate (multiply by 4 for responsiveness)
-    // Add padding (35px each side = 70px) + gap for next button (25px) + next button width (60px + 20px padding) = ~175px
-    // Then multiply by 4 for 4x change rate
-    const calculatedWidth = Math.max((textWidth * 4) + 175, 400); // Minimum 400px
-    const maxWidth = window.innerWidth - 40; // Leave 20px margin on each side
+    // Calculate chat box width: use actual text width + padding, but ensure it fits screen
+    // TEXTBOX PADDING BREAKDOWN:
+    //   - padding-left: 50px (CSS: .chat-box padding-left)
+    //   - padding-right: 35px (CSS: .chat-box padding-right)
+    //   - gap between text and next button: 25px (CSS: .chat-box gap)
+    //   - next button space: ~80px (60px arrow width + 20px button padding)
+    //   Total horizontal padding/space: 50 + 35 + 25 + 80 = 190px
+    const calculatedWidth = Math.max(textWidth + 190, 400); // Minimum 400px
+    const maxWidth = window.innerWidth - 60; // Leave 30px margin on each side for safety
     
     chatBox.style.width = `${Math.min(calculatedWidth, maxWidth)}px`;
+    
+    // Calculate and set height: text height + padding + extra space for taller box
+    // TEXTBOX VERTICAL PADDING BREAKDOWN:
+    //   - padding-top: 10px (CSS: .chat-box padding-top)
+    //   - padding-bottom: 60px (CSS: .chat-box padding-bottom)
+    //   - extra spacing: 30px
+    //   Total vertical padding: 10 + 60 + 30 = 100px
+    const minHeight = 350; // Increased minimum height for taller textbox
+    const calculatedHeight = Math.max(textHeight + 100, minHeight);
+    chatBox.style.minHeight = `${calculatedHeight}px`;
+    chatBox.style.height = 'auto'; // Allow natural expansion
+    
     chatBox.style.left = '50%';
     chatBox.style.right = 'auto';
     chatBox.style.transform = 'translateX(-50%)';
@@ -262,29 +360,30 @@ export function mountChat(containerSelector, options = {}){
     if(!lineText) return; 
     lineText.textContent = '';
     
-    // Update chat box width based on text (4x change rate)
-    updateChatBoxWidth(text);
+    // Update chat box size based on text
+    updateChatBoxSize(text);
     
     // Start playing animalese audio for the full text
     playLineAudio(text);
     
-    // Type character by character
+    // Type character by character with slower speed (50-100ms per character)
     for(let i=0;i<text.length;i++){ 
       // Check if user clicked to skip (handled by main click handler)
       if (!isTyping) {
         // User clicked, show full text immediately
         lineText.textContent = text;
-        updateChatBoxWidth(text); // Update width when skipping
+        updateChatBoxSize(text); // Update size when skipping
         break;
       }
       lineText.textContent += text[i]; 
-      await new Promise(r=>setTimeout(r, 28 + Math.random()*40)); 
+      // Slower typing speed: 50-100ms per character (was 28-68ms)
+      await new Promise(r=>setTimeout(r, 50 + Math.random()*50)); 
     }
     
     // Ensure full text is shown
     if (lineText) {
       lineText.textContent = text;
-      updateChatBoxWidth(text); // Final width update
+      updateChatBoxSize(text); // Final size update
     }
     
     isTyping = false; 
@@ -418,7 +517,16 @@ export function mountChat(containerSelector, options = {}){
       const b = document.createElement('button');
       b.className='choice-btn';
       b.textContent=c.text;
-      b.onclick=()=>handleChoice(c);
+      
+      // Add hover sound effect
+      b.addEventListener('mouseenter', () => playButtonHoverSound());
+      
+      // Add click handler with sound effect
+      b.addEventListener('click', (e) => {
+        playButtonClickSound();
+        handleChoice(c);
+      });
+      
       // Use tab assets for choices, cycle through them
       const assetIndex = idx % tabAssets.length;
       const assetPath = options.assetsPath ? `${options.assetsPath}/tabs/${tabAssets[assetIndex]}` : `./assets/tabs/${tabAssets[assetIndex]}`;
@@ -427,6 +535,10 @@ export function mountChat(containerSelector, options = {}){
       b.style.width = `${buttonWidth}px`;
       b.style.height = `${buttonHeight}px`;
       b.style.minHeight = `${buttonHeight}px`;
+      // Ensure text is centered - flex properties already set in CSS
+      b.style.display = 'flex';
+      b.style.alignItems = 'center';
+      b.style.justifyContent = 'center';
       // Remove any margin/padding that might cause larger clickable area
       b.style.margin = '0';
       b.style.overflow = 'visible';
