@@ -4,6 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dr. GPT Financial Consultant - Quackosaurus-rex</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="components/chat/chat-component.css" />
   <style>
     .chat-input-container {
@@ -88,7 +91,8 @@
       speakerNames: {
         robot: 'Dr. GPT',
         duck: 'You'
-      }
+      },
+      goBackUrl: 'bankReception.html'
     });
 
     // Update background and avatars
@@ -108,13 +112,7 @@
         rightAvatar.style.backgroundImage = 'url("./assets/characters/duckFlip.GIF")';
       }
       
-      // Update back button to go to reception
-      const backBtn = container.querySelector('.btn-back');
-      if (backBtn) {
-        backBtn.addEventListener('click', () => {
-          window.location.href = 'bankReception.html';
-        });
-      }
+      // Back functionality now handled by dropdown menu
 
       // Show chat input after greeting completes (3 seconds)
       setTimeout(() => {

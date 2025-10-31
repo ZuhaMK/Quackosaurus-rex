@@ -19,19 +19,24 @@ export function mountChat(containerSelector, options = {}){
       <div class="avatar right" data-speaker="duck" aria-hidden="true">D</div>
     </div>
 
-    <div class="chat-box">
-      <div class="chat-controls">
-        <button class="control btn-back">⟵ Back</button>
-        <button class="control btn-history">History</button>
+    <div class="dropdown-menu">
+      <button class="dropdown-toggle">☰ Menu</button>
+      <div class="dropdown-content">
+        <div class="dropdown-item" data-action="go-back">Go Back to Options</div>
+        <div class="dropdown-item" data-action="history">Chat History</div>
+        <div class="dropdown-item" data-action="mute">Mute Music</div>
       </div>
+    </div>
 
+    <div class="chat-box">
       <div class="line-area">
         <div class="speaker-label">&nbsp;</div>
         <div class="line-text" aria-live="polite"></div>
       </div>
-
-      <div class="choices hidden"></div>
+      <button class="btn-next hidden">Next →</button>
     </div>
+
+    <div class="choices hidden"></div>
 
     <div class="history-overlay hidden" role="dialog" aria-modal="true">
       <div class="history-inner">
@@ -48,12 +53,14 @@ export function mountChat(containerSelector, options = {}){
   const avatarRight = qs('.avatar.right');
   const speakerLabel = qs('.speaker-label');
   const lineText = qs('.line-text');
-  const btnBack = qs('.btn-back');
-  const btnHistory = qs('.btn-history');
+  const btnNext = qs('.btn-next');
   const choicesEl = qs('.choices');
   const historyOverlay = qs('.history-overlay');
   const historyList = qs('.history-list');
   const historyClose = qs('.history-close');
+  const dropdownToggle = qs('.dropdown-toggle');
+  const dropdownContent = qs('.dropdown-content');
+  const dropdownItems = dropdownContent ? dropdownContent.querySelectorAll('.dropdown-item') : [];
 
   // dialog data - allow override
   const DIALOG = options.dialog || [
@@ -114,6 +121,11 @@ export function mountChat(containerSelector, options = {}){
   }
 
   async function playLineAudio(text = ''){
+    // Check if muted
+    if (window.animaleseMuted) {
+      return;
+    }
+    
     try {
       // Stop any currently playing audio
       if (currentAnimaleseAudio) {
@@ -240,6 +252,8 @@ export function mountChat(containerSelector, options = {}){
     // prepare current text (used for click-to-complete)
     currentStepText = step.text || '';
     showAvatar(step.speaker); hideAvatar(step.speaker==='robot'?'duck':'robot');
+    // Hide Next button initially (will show after typing completes if needed)
+    if(btnNext) btnNext.classList.add('hidden');
 
     // type the text (user can click during typing to finish immediately)
     await typeLine(step.text);
@@ -250,13 +264,17 @@ export function mountChat(containerSelector, options = {}){
     if(step.choices){
       showChoices(step.choices);
       waitingForClick = false;
+      if(btnNext) btnNext.classList.add('hidden');
     } else {
       choicesEl.classList.add('hidden');
+      choicesEl.classList.remove('show');
       // Always wait for user click to continue (no auto-advance)
       if(index < DIALOG.length-1){
         waitingForClick = true;
+        if(btnNext) btnNext.classList.remove('hidden');
       } else {
         waitingForClick = false;
+        if(btnNext) btnNext.classList.add('hidden');
       }
     }
 
@@ -266,9 +284,27 @@ export function mountChat(containerSelector, options = {}){
     }
   }
 
-  function showChoices(choices){ if(!choicesEl) return; choicesEl.innerHTML='';
-    choices.forEach(c=>{ const b = document.createElement('button'); b.className='choice-btn'; b.textContent=c.text; b.onclick=()=>handleChoice(c); choicesEl.appendChild(b); });
-    choicesEl.classList.remove('hidden'); }
+  function showChoices(choices){ 
+    if(!choicesEl) return; 
+    choicesEl.innerHTML='';
+    const bubbleAssets = ['bubblePink.png', 'bubbleYellow.png', 'bubbleBlue.PNG'];
+    const tabAssets = ['tabPink.png', 'tabYellow.png', 'tabBlue.png', 'tabGreen.png'];
+    choices.forEach((c, idx)=>{
+      const b = document.createElement('button');
+      b.className='choice-btn';
+      b.textContent=c.text;
+      b.onclick=()=>handleChoice(c);
+      // Use tab assets for choices, cycle through them
+      const assetIndex = idx % tabAssets.length;
+      const assetPath = options.assetsPath ? `${options.assetsPath}/tabs/${tabAssets[assetIndex]}` : `./assets/tabs/${tabAssets[assetIndex]}`;
+      b.style.backgroundImage = `url('${assetPath}')`;
+      choicesEl.appendChild(b);
+    });
+    choicesEl.classList.remove('hidden');
+    choicesEl.classList.add('show');
+    // Hide Next button when choices are shown
+    if(btnNext) btnNext.classList.add('hidden');
+  }
 
   function handleChoice(choice){ appendHistory({speaker:'duck', text:choice.text}); renderInlineDuckLine(choice.text); setTimeout(()=>{ if(choice.feedback) renderStepFromInline({speaker:'robot', text:choice.feedback, then:choice.next}); else renderStep(choice.next); }, 700); }
 
@@ -284,8 +320,56 @@ export function mountChat(containerSelector, options = {}){
   function goBack(){ if(isTyping) return; if(history.length<=1) return; history.pop(); const last = history[history.length-1]; if(!last) return; const found = DIALOG.findIndex(d=>d.text===last.text && d.speaker===last.speaker); if(found>=0){ index = found; if(speakerLabel) speakerLabel.textContent = last.speaker==='robot' ? 'QuackBot' : 'You'; if(lineText) lineText.textContent = last.text; showAvatar(last.speaker); setTimeout(()=>hideAvatar(last.speaker),700); } else { if(speakerLabel) speakerLabel.textContent = last.speaker==='robot' ? 'QuackBot' : 'You'; if(lineText) lineText.textContent = last.text; } }
 
   // wire controls
-  if(btnBack) btnBack.addEventListener('click', ()=>goBack());
-  if(btnHistory) btnHistory.addEventListener('click', ()=>openHistory());
+  if(btnNext) btnNext.addEventListener('click', ()=>{
+    if(waitingForClick && index < DIALOG.length-1){
+      waitingForClick = false;
+      renderStep(index+1);
+    }
+  });
+  
+  // Dropdown menu functionality
+  if(dropdownToggle){
+    dropdownToggle.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      dropdownContent.classList.toggle('show');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e)=>{
+      if(!dropdownToggle.contains(e.target) && !dropdownContent.contains(e.target)){
+        dropdownContent.classList.remove('show');
+      }
+    });
+  }
+  
+  // Dropdown menu items
+  dropdownItems.forEach(item => {
+    item.addEventListener('click', (e)=>{
+      const action = item.getAttribute('data-action');
+      dropdownContent.classList.remove('show');
+      
+      if(action === 'go-back'){
+        // Go back to options page (bank reception)
+        if(options.goBackUrl){
+          window.location.href = options.goBackUrl;
+        } else {
+          window.location.href = 'bankReception.html';
+        }
+      } else if(action === 'history'){
+        openHistory();
+      } else if(action === 'mute'){
+        // Toggle mute for animalese audio
+        if(window.animaleseMuted){
+          window.animaleseMuted = false;
+          item.textContent = 'Mute Music';
+        } else {
+          window.animaleseMuted = true;
+          item.textContent = 'Unmute Music';
+        }
+      }
+    });
+  });
+  
   if(historyClose) historyClose.addEventListener('click', ()=>closeHistory());
 
   // click/interaction behaviour on the chat box:
@@ -315,6 +399,9 @@ export function mountChat(containerSelector, options = {}){
       }
     }, { once: false });
   }
+  
+  // Initialize mute state
+  window.animaleseMuted = false;
 
   // audio unlock - ensure audio context can play (for animalese)
   document.body.addEventListener('click', function unlock(){ 
