@@ -222,10 +222,48 @@ export function mountChat(containerSelector, options = {}){
     if(chatBox) chatBox.style.backgroundImage = `url('${base.replace(/\/$/,'')}/textBox/textBox.png')`;
   })();
 
+  // Function to update chat box width based on text content (4x change rate)
+  function updateChatBoxWidth(text) {
+    const chatBox = container.querySelector('.chat-box');
+    if (!chatBox || !text) return;
+    
+    // Create temporary element to measure text width
+    const tempMeasure = document.createElement('div');
+    tempMeasure.style.position = 'absolute';
+    tempMeasure.style.visibility = 'hidden';
+    tempMeasure.style.fontFamily = '"Pixelify Sans", sans-serif';
+    tempMeasure.style.fontSize = '36px'; // Same as line-text
+    tempMeasure.style.fontWeight = '400';
+    tempMeasure.style.whiteSpace = 'pre-wrap';
+    tempMeasure.style.wordWrap = 'break-word';
+    tempMeasure.style.maxWidth = 'calc(100vw - 120px)'; // Account for padding and margins
+    tempMeasure.style.width = 'auto';
+    tempMeasure.textContent = text;
+    document.body.appendChild(tempMeasure);
+    
+    // Measure the actual width needed
+    const textWidth = tempMeasure.offsetWidth;
+    document.body.removeChild(tempMeasure);
+    
+    // Calculate chat box width with 4x change rate (multiply by 4 for responsiveness)
+    // Add padding (35px each side = 70px) + gap for next button (25px) + next button width (60px + 20px padding) = ~175px
+    // Then multiply by 4 for 4x change rate
+    const calculatedWidth = Math.max((textWidth * 4) + 175, 400); // Minimum 400px
+    const maxWidth = window.innerWidth - 40; // Leave 20px margin on each side
+    
+    chatBox.style.width = `${Math.min(calculatedWidth, maxWidth)}px`;
+    chatBox.style.left = '50%';
+    chatBox.style.right = 'auto';
+    chatBox.style.transform = 'translateX(-50%)';
+  }
+  
   async function typeLine(text){ 
     isTyping = true; 
     if(!lineText) return; 
     lineText.textContent = '';
+    
+    // Update chat box width based on text (4x change rate)
+    updateChatBoxWidth(text);
     
     // Start playing animalese audio for the full text
     playLineAudio(text);
@@ -236,6 +274,7 @@ export function mountChat(containerSelector, options = {}){
       if (!isTyping) {
         // User clicked, show full text immediately
         lineText.textContent = text;
+        updateChatBoxWidth(text); // Update width when skipping
         break;
       }
       lineText.textContent += text[i]; 
@@ -245,6 +284,7 @@ export function mountChat(containerSelector, options = {}){
     // Ensure full text is shown
     if (lineText) {
       lineText.textContent = text;
+      updateChatBoxWidth(text); // Final width update
     }
     
     isTyping = false; 
@@ -369,8 +409,9 @@ export function mountChat(containerSelector, options = {}){
       // - Always ensure minimum width of 600px
       const actualTextWidth = naturalWidth <= 1200 ? naturalWidth : Math.max(wrappedWidth, 1200);
       
-      // Calculate button size: add padding (100px each side = 200px total, 50px top + 90px bottom = 140px total)
-      const buttonWidth = Math.max(actualTextWidth + 200, 600);
+      // Calculate button size: doubled change rate - reduced padding (50px each side = 100px total, 50px top + 90px bottom = 140px total)
+      // Reduced padding from 200px to 100px to make buttons 2x more responsive to text width changes
+      const buttonWidth = Math.max(actualTextWidth + 100, 600);
       const buttonHeight = Math.max(textHeight + 140, 180);
       
       // Create the button
