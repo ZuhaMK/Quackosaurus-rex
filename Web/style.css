@@ -1,0 +1,18 @@
+/* --- General layout adjustments --- */
+body {
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+body.startpg {
+  background: url('assets/homebg.png') no-repeat center center fixed;
+  background-size: cover;
+}
+
+.chat-bubble {
+    word-break: break-word;
+}
+
+#chat-box {
+    scroll-behavior: smooth;
+}
