@@ -1,10 +1,295 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Title</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Credit & Debt Room - Quackosaurus-rex</title>
+  <link rel="stylesheet" href="components/chat/chat-component.css" />
 </head>
-<body class = "credit&debit">
+<body>
+  <div id="credit-container" style="height:100vh"></div>
 
+  <script type="module">
+    import { mountChat } from './components/chat/chat-component.js';
+
+    // Credit & Debt Dialogue
+    const CREDIT_DIALOG = [
+      {
+        id: 0,
+        speaker: 'robot',
+        text: 'Welcome to the Credit & Debt Room! This is where we talk about the C-word... Credit! And the D-word... Debt! Don\'t worry, they\'re not as scary as they sound! 😊'
+      },
+      {
+        id: 1,
+        speaker: 'robot',
+        text: 'First things first: Do you know what a credit score is?'
+      },
+      {
+        id: 2,
+        speaker: 'robot',
+        text: 'What\'s your guess?',
+        choices: [
+          {
+            id: 'a',
+            text: 'Like a report card for money?',
+            next: 3,
+            feedback: 'Exactly right! It\'s basically a number that tells lenders how trustworthy you are with money! Think of it like a reputation score! 🎯'
+          },
+          {
+            id: 'b',
+            text: 'Something that helps you borrow money?',
+            next: 3,
+            feedback: 'Exactly right! It\'s basically a number that tells lenders how trustworthy you are with money! Think of it like a reputation score! 🎯'
+          },
+          {
+            id: 'c',
+            text: 'I have no idea!',
+            next: 4,
+            feedback: 'No worries! A credit score is a number (usually 300-850) that shows how good you are at paying back money you borrow. Higher = better! Like a video game score! 🎮'
+          }
+        ]
+      },
+      {
+        id: 3,
+        speaker: 'robot',
+        text: 'Exactly right! It\'s basically a number that tells lenders how trustworthy you are with money! Think of it like a reputation score! 🎯'
+      },
+      {
+        id: 4,
+        speaker: 'robot',
+        text: 'No worries! A credit score is a number (usually 300-850) that shows how good you are at paying back money you borrow. Higher = better! Like a video game score! 🎮'
+      },
+      {
+        id: 5,
+        speaker: 'robot',
+        text: 'Time for a pop quiz! What\'s considered a GOOD credit score?'
+      },
+      {
+        id: 6,
+        speaker: 'robot',
+        text: 'Choose your answer:',
+        choices: [
+          {
+            id: 'a',
+            text: '300-500',
+            next: 7,
+            feedback: 'Nope! That\'s actually poor credit. You\'ll need to work on it!'
+          },
+          {
+            id: 'b',
+            text: '500-650',
+            next: 8,
+            feedback: 'That\'s fair credit - not bad, but room for improvement! Aim higher!'
+          },
+          {
+            id: 'c',
+            text: '670-850',
+            next: 9,
+            feedback: 'YES! That\'s good to excellent credit! You\'re on fire! 🔥'
+          }
+        ]
+      },
+      {
+        id: 7,
+        speaker: 'robot',
+        text: 'Nope! That\'s actually poor credit. You\'ll need to work on it!'
+      },
+      {
+        id: 8,
+        speaker: 'robot',
+        text: 'That\'s fair credit - not bad, but room for improvement! Aim higher!'
+      },
+      {
+        id: 9,
+        speaker: 'robot',
+        text: 'YES! That\'s good to excellent credit! You\'re on fire! 🔥'
+      },
+      {
+        id: 10,
+        speaker: 'robot',
+        text: 'Imagine this: You just turned 18, and you got a credit card offer in the mail! The card has:\n• 0% interest for 6 months\n• Then 25% APR (Annual Percentage Rate)\n• $500 credit limit\n• Cool rewards points!\n\nWhat should you do?'
+      },
+      {
+        id: 11,
+        speaker: 'robot',
+        text: 'What\'s your decision?',
+        choices: [
+          {
+            id: 'a',
+            text: 'Get it, but only use it for emergencies and pay it off each month',
+            next: 12,
+            feedback: 'BRILLIANT! That\'s the smart way! You\'ll build credit AND avoid interest! 🌟'
+          },
+          {
+            id: 'b',
+            text: 'Get it and use it for everything! YOLO!',
+            next: 13,
+            feedback: 'Whoa there! That\'s how debt spirals start! Only use it if you can pay it back immediately!'
+          },
+          {
+            id: 'c',
+            text: 'Ignore it - credit cards are evil!',
+            next: 14,
+            feedback: 'Actually, credit cards are tools! When used wisely, they help build credit! Just be responsible!'
+          }
+        ]
+      },
+      {
+        id: 12,
+        speaker: 'robot',
+        text: 'BRILLIANT! That\'s the smart way! You\'ll build credit AND avoid interest! 🌟'
+      },
+      {
+        id: 13,
+        speaker: 'robot',
+        text: 'Whoa there! That\'s how debt spirals start! Only use it if you can pay it back immediately!'
+      },
+      {
+        id: 14,
+        speaker: 'robot',
+        text: 'Actually, credit cards are tools! When used wisely, they help build credit! Just be responsible!'
+      },
+      {
+        id: 15,
+        speaker: 'robot',
+        text: 'Let\'s talk about INTEREST - the price of borrowing money! Think of it like a rental fee for using someone else\'s money! 💸\n\nHere\'s the thing: Interest rates can sneak up on you!\n\nExample: If you borrow $1000 at 20% APR and only pay the minimum ($25/month), you\'ll pay over $1,800 total! Yikes! 😱\n\nThe lesson? Pay off your balance in full each month when possible!'
+      },
+      {
+        id: 16,
+        speaker: 'robot',
+        text: 'You have two debts:\n• Credit Card A: $500 balance, 20% APR\n• Credit Card B: $1000 balance, 15% APR\n\nYou can pay $200 this month. What\'s the smartest strategy?'
+      },
+      {
+        id: 17,
+        speaker: 'robot',
+        text: 'What\'s your strategy?',
+        choices: [
+          {
+            id: 'a',
+            text: 'Pay both equally - $100 to each',
+            next: 18,
+            feedback: 'Not bad, but there\'s a smarter way! Always pay minimums on both, then focus on the higher interest rate!'
+          },
+          {
+            id: 'b',
+            text: 'Pay minimum on Card B ($25), put rest ($175) on Card A',
+            next: 19,
+            feedback: 'PERFECT! You\'re using the "Avalanche Method" - targeting high interest first saves the most money! 🎯'
+          },
+          {
+            id: 'c',
+            text: 'Just pay Card B - it has the bigger balance',
+            next: 20,
+            feedback: 'Balance size doesn\'t matter as much as interest rate! Higher interest costs you more over time!'
+          }
+        ]
+      },
+      {
+        id: 18,
+        speaker: 'robot',
+        text: 'Not bad, but there\'s a smarter way! Always pay minimums on both, then focus on the higher interest rate!'
+      },
+      {
+        id: 19,
+        speaker: 'robot',
+        text: 'PERFECT! You\'re using the "Avalanche Method" - targeting high interest first saves the most money! 🎯'
+      },
+      {
+        id: 20,
+        speaker: 'robot',
+        text: 'Balance size doesn\'t matter as much as interest rate! Higher interest costs you more over time!'
+      },
+      {
+        id: 21,
+        speaker: 'robot',
+        text: 'Here\'s a real scenario: You need to pay for college. You have options:\n1. Scholarships & Grants (free money!)\n2. Federal Student Loans (lower interest, flexible repayment)\n3. Private Loans (higher interest, less flexible)\n\nWhat\'s the BEST strategy?'
+      },
+      {
+        id: 22,
+        speaker: 'robot',
+        text: 'What would you do?',
+        choices: [
+          {
+            id: 'a',
+            text: 'Apply for scholarships first, then federal loans, private as last resort',
+            next: 23,
+            feedback: 'BINGO! That\'s exactly the right order! Always exhaust free money first! 🏆'
+          },
+          {
+            id: 'b',
+            text: 'Just get whatever loan is easiest',
+            next: 24,
+            feedback: 'Easy isn\'t always smart! Federal loans have better protections and lower rates!'
+          },
+          {
+            id: 'c',
+            text: 'Skip college, who needs it anyway?',
+            next: 25,
+            feedback: 'Education is valuable, but there are many paths! Just make sure whatever you choose doesn\'t leave you drowning in debt!'
+          }
+        ]
+      },
+      {
+        id: 23,
+        speaker: 'robot',
+        text: 'BINGO! That\'s exactly the right order! Always exhaust free money first! 🏆'
+      },
+      {
+        id: 24,
+        speaker: 'robot',
+        text: 'Easy isn\'t always smart! Federal loans have better protections and lower rates!'
+      },
+      {
+        id: 25,
+        speaker: 'robot',
+        text: 'Education is valuable, but there are many paths! Just make sure whatever you choose doesn\'t leave you drowning in debt!'
+      },
+      {
+        id: 26,
+        speaker: 'robot',
+        text: 'Credit & Debt Pro Tips:\n1. 💳 Pay credit card balances in FULL each month\n2. 📅 Never miss a payment - it kills your credit score!\n3. 📊 Check your credit report annually (it\'s free!)\n4. 🎯 Focus high-interest debt first (Avalanche Method)\n5. 🚫 Don\'t max out credit cards - keep usage below 30%\n6. 💪 Build emergency fund BEFORE taking on new debt\n7. 🔍 Read the fine print - know what you\'re signing!\n\nRemember: Good credit = More opportunities = Better life! 🌟'
+      },
+      {
+        id: 27,
+        speaker: 'robot',
+        text: 'You\'ve conquered credit and debt knowledge! You\'re now equipped to make smart borrowing decisions! 🎓\n\nClick "Back" to return to the reception, or refresh to restart this room!'
+      }
+    ];
+
+    const chat = mountChat('#credit-container', {
+      dialog: CREDIT_DIALOG,
+      assetsPath: './assets',
+      speakerNames: {
+        robot: 'Credit Counselor',
+        duck: 'You'
+      }
+    });
+
+    // Update background and avatars
+    const container = document.querySelector('#credit-container');
+    if (container) {
+      const bg = container.querySelector('.background');
+      if (bg) {
+        bg.style.background = 'linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("./assets/backgrounds/LivingRoom.jpeg") center/cover no-repeat';
+      }
+      // Use dino for counselor
+      const leftAvatar = container.querySelector('.avatar.left');
+      if (leftAvatar) {
+        leftAvatar.style.backgroundImage = 'url("./assets/characters/dino.GIF")';
+      }
+      const rightAvatar = container.querySelector('.avatar.right');
+      if (rightAvatar) {
+        rightAvatar.style.backgroundImage = 'url("./assets/characters/duckFlip.GIF")';
+      }
+      
+      // Update back button to go to reception
+      const backBtn = container.querySelector('.btn-back');
+      if (backBtn) {
+        backBtn.addEventListener('click', () => {
+          window.location.href = 'bankReception.html';
+        });
+      }
+    }
+  </script>
 </body>
 </html>

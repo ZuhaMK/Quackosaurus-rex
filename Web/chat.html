@@ -1,37 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Chat Page</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dr. GPT Financial Consultant - Quackosaurus-rex</title>
+  <link rel="stylesheet" href="components/chat/chat-component.css" />
+  <style>
+    .chat-input-container {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      display: none;
+      gap: 10px;
+      z-index: 1000;
+      margin-bottom: 180px; /* Space above the chat-box */
+    }
+    .chat-input-container.active {
+      display: flex;
+    }
+    .chat-input-container input {
+      flex: 1;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.95);
+      color: #000;
+    }
+    .chat-input-container input:focus {
+      outline: none;
+      background: #fff;
+    }
+    .chat-input-container button {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #2196F3, #1976D2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .chat-input-container button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+    }
+    .chat-input-container button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .loading-indicator {
+      display: none;
+      color: #aaa;
+      font-style: italic;
+    }
+    .loading-indicator.active {
+      display: block;
+    }
+  </style>
 </head>
+<body>
+  <div id="dr-gpt-container" style="height:100vh"></div>
+  
+  <!-- Chat Input for ChatGPT API -->
+  <div class="chat-input-container" id="chatInputContainer">
+    <input type="text" id="userMessageInput" placeholder="Ask me anything about finances..." />
+    <button id="sendMessageBtn">Send</button>
+  </div>
 
-<body class="flex h-screen overflow-hidden chat">
+  <script type="module">
+    import { mountChat } from './components/chat/chat-component.js';
 
-    <section class="flex-1 bg-white flex items-center justify-center border-r border-gray-200">
-        <p class="text-gray-500 text-lg">Main content area (60%)</p>
-    </section>
+    // Simple greeting, then go straight to ChatGPT mode
+    const DRGPT_DIALOG = [
+      {
+        id: 0,
+        speaker: 'robot',
+        text: 'Greetings! I am Dr. GPT, your AI Financial Consultant! 🤖✨\n\nI\'m here to answer all your financial questions and give you personalized advice!\n\nThink of me as your 24/7 financial buddy who never sleeps (because I\'m a robot, haha)! 😄\n\nWhat would you like to know about finances today? Just type your question below! 🎯'
+      }
+    ];
 
-    <section class="w-2/5 flex flex-col bg-gray-50">
+    const chat = mountChat('#dr-gpt-container', {
+      dialog: DRGPT_DIALOG,
+      assetsPath: './assets',
+      speakerNames: {
+        robot: 'Dr. GPT',
+        duck: 'You'
+      }
+    });
 
-        <header class="p-4 border-b bg-white text-lg font-semibold shadow-sm">
-            Chat Interface
-        </header>
+    // Update background and avatars
+    const container = document.querySelector('#dr-gpt-container');
+    if (container) {
+      const bg = container.querySelector('.background');
+      if (bg) {
+        bg.style.background = 'linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("./assets/backgrounds/LivingRoom.jpeg") center/cover no-repeat';
+      }
+      // Use robot for Dr. GPT
+      const leftAvatar = container.querySelector('.avatar.left');
+      if (leftAvatar) {
+        leftAvatar.style.backgroundImage = 'url("./assets/characters/robot.GIF")';
+      }
+      const rightAvatar = container.querySelector('.avatar.right');
+      if (rightAvatar) {
+        rightAvatar.style.backgroundImage = 'url("./assets/characters/duckFlip.GIF")';
+      }
+      
+      // Update back button to go to reception
+      const backBtn = container.querySelector('.btn-back');
+      if (backBtn) {
+        backBtn.addEventListener('click', () => {
+          window.location.href = 'bankReception.html';
+        });
+      }
 
-        <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4">
-            </div>
+      // Show chat input after greeting completes (3 seconds)
+      setTimeout(() => {
+        document.getElementById('chatInputContainer').classList.add('active');
+        document.getElementById('userMessageInput').focus();
+      }, 3000);
+    }
 
-        <footer class="p-4 border-t bg-white flex items-center space-x-2">
-            <input id="user-input" type="text" placeholder="Type a message..."
-                class="input input-bordered w-full" />
-            <button id="send-btn" class="btn btn-primary">Send</button>
-        </footer>
-    </section>
+    // ChatGPT API Integration
+    const chatInput = document.getElementById('userMessageInput');
+    const sendBtn = document.getElementById('sendMessageBtn');
+    const chatContainer = document.querySelector('#dr-gpt-container');
 
+    async function sendChatMessage() {
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      // Disable input while processing
+      chatInput.disabled = true;
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending...';
+
+      // Show user message in chat
+      const container = document.querySelector('#dr-gpt-container');
+      const lineText = container.querySelector('.line-text');
+      const speakerLabel = container.querySelector('.speaker-label');
+      const choicesEl = container.querySelector('.choices');
+      
+      if (choicesEl) choicesEl.classList.add('hidden');
+      
+      // Show user's question
+      if (speakerLabel) speakerLabel.textContent = 'You';
+      if (lineText) {
+        lineText.textContent = message;
+      }
+      chatInput.value = '';
+
+      // Show loading indicator
+      if (speakerLabel) speakerLabel.textContent = 'Dr. GPT';
+      if (lineText) {
+        lineText.textContent = 'Thinking...';
+      }
+
+      try {
+        const response = await fetch('http://127.0.0.1:5000/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: message })
+        });
+
+        const data = await response.json();
+        
+        if (data.error) {
+          if (lineText) {
+            lineText.textContent = `Sorry, I encountered an error: ${data.error}`;
+          }
+        } else {
+          // Display response with typewriter effect
+          if (lineText) {
+            lineText.textContent = '';
+            const reply = data.reply;
+            for (let i = 0; i < reply.length; i++) {
+              lineText.textContent += reply[i];
+              await new Promise(r => setTimeout(r, 20));
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        if (lineText) {
+          lineText.textContent = 'Sorry, I couldn\'t connect to the server. Make sure Flask is running on http://127.0.0.1:5000';
+        }
+      } finally {
+        // Re-enable input
+        chatInput.disabled = false;
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send';
+        chatInput.focus();
+      }
+    }
+
+    // Event listeners for chat input
+    if (sendBtn) {
+      sendBtn.addEventListener('click', sendChatMessage);
+    }
+    if (chatInput) {
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          sendChatMessage();
+        }
+      });
+    }
+  </script>
 </body>
 </html>
