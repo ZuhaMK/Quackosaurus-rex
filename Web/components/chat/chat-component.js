@@ -328,15 +328,25 @@ export function mountChat(containerSelector, options = {}){
     document.body.removeChild(tempMeasure);
     
     // Calculate chat box width: use actual text width + padding, but ensure it fits screen
-    // Add padding (35px each side = 70px) + gap for next button (25px) + next button space (~80px) = ~175px
-    const calculatedWidth = Math.max(textWidth + 175, 400); // Minimum 400px
+    // TEXTBOX PADDING BREAKDOWN:
+    //   - padding-left: 50px (CSS: .chat-box padding-left)
+    //   - padding-right: 35px (CSS: .chat-box padding-right)
+    //   - gap between text and next button: 25px (CSS: .chat-box gap)
+    //   - next button space: ~80px (60px arrow width + 20px button padding)
+    //   Total horizontal padding/space: 50 + 35 + 25 + 80 = 190px
+    const calculatedWidth = Math.max(textWidth + 190, 400); // Minimum 400px
     const maxWidth = window.innerWidth - 60; // Leave 30px margin on each side for safety
     
     chatBox.style.width = `${Math.min(calculatedWidth, maxWidth)}px`;
     
     // Calculate and set height: text height + padding + extra space for taller box
+    // TEXTBOX VERTICAL PADDING BREAKDOWN:
+    //   - padding-top: 10px (CSS: .chat-box padding-top)
+    //   - padding-bottom: 60px (CSS: .chat-box padding-bottom)
+    //   - extra spacing: 30px
+    //   Total vertical padding: 10 + 60 + 30 = 100px
     const minHeight = 350; // Increased minimum height for taller textbox
-    const calculatedHeight = Math.max(textHeight + 100, minHeight); // padding top/bottom = 70px + 30px extra
+    const calculatedHeight = Math.max(textHeight + 100, minHeight);
     chatBox.style.minHeight = `${calculatedHeight}px`;
     chatBox.style.height = 'auto'; // Allow natural expansion
     
