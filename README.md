@@ -49,3 +49,37 @@ By playing the game, users will:
 - Learn how to budget, save and plan expenses.
 - Understand credit, loans and managing debt.
 - Gain confidence in seeking financial advice when needed.
+
+## ⚙️ Setup (install dependencies)
+
+If you don't have Flask, the OpenAI Python client, or python-dotenv installed, use the project-provided requirements and setup script.
+
+1. Create and activate a virtual environment, and install dependencies:
+
+	```bash
+	# make the setup script executable (once)
+	chmod +x setup.sh
+
+	# run the setup script (creates .venv and installs requirements)
+	./setup.sh
+	```
+
+2. Activate the virtual environment (on macOS / Linux):
+
+	```bash
+	source .venv/bin/activate
+	```
+
+3. Run the Flask app:
+
+	```bash
+	python finance-duck-advice/finance-duck-advice/app.py
+	```
+
+Notes:
+- If you prefer manual installation, you can run `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt` instead of the script.
+- The `OPENAI_API_KEY` should be set in your environment or a `.env` file in the `finance-duck-advice/finance-duck-advice/` folder. Example `.env` content:
+
+  ```text
+  OPENAI_API_KEY=sk-...your-key-here...
+  ```
