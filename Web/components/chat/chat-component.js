@@ -33,7 +33,9 @@ export function mountChat(containerSelector, options = {}){
         <div class="speaker-label">&nbsp;</div>
         <div class="line-text" aria-live="polite"></div>
       </div>
-      <button class="btn-next hidden">Next →</button>
+      <button class="btn-next hidden">
+        <img src="${(options.assetsPath || './assets')}/arrows/rightArrow.png" alt="Next" class="btn-next-arrow" />
+      </button>
     </div>
 
     <div class="choices hidden"></div>

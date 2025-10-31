@@ -31,8 +31,9 @@
 .quack-chat .dropdown-item:hover{background:rgba(255,255,255,0.1)}
 
 /* Next button */
-.quack-chat .btn-next{background:rgba(255,255,255,0.9);color:#000;border:2px solid #fff;padding:15px 30px;border-radius:10px;cursor:pointer;font-family:'Pixelify Sans',sans-serif;font-size:22px;font-weight:700;margin-left:auto}
-.quack-chat .btn-next:hover{background:#fff;transform:scale(1.05)}
+.quack-chat .btn-next{background:transparent;border:none;padding:10px;cursor:pointer;margin-left:auto;display:flex;align-items:center;justify-content:center}
+.quack-chat .btn-next:hover{transform:scale(1.1)}
+.quack-chat .btn-next-arrow{width:60px;height:60px;object-fit:contain;display:block}
 
 .quack-chat .history-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center}
 .quack-chat .history-overlay.open{display:flex}
