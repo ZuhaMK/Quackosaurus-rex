@@ -265,7 +265,8 @@
       speakerNames: {
         robot: 'Credit Counselor',
         duck: 'You'
-      }
+      },
+      goBackUrl: 'bankReception.html'
     });
 
     // Update background and avatars
@@ -285,13 +286,7 @@
         rightAvatar.style.backgroundImage = 'url("./assets/characters/duckFlip.GIF")';
       }
       
-      // Update back button to go to reception
-      const backBtn = container.querySelector('.btn-back');
-      if (backBtn) {
-        backBtn.addEventListener('click', () => {
-          window.location.href = 'bankReception.html';
-        });
-      }
+      // Back functionality now handled by dropdown menu
     }
   </script>
 </body>
