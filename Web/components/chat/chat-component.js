@@ -291,6 +291,12 @@ export function mountChat(containerSelector, options = {}){
     // set chat box background
     const chatBox = container.querySelector('.chat-box');
     if(chatBox) chatBox.style.backgroundImage = `url('${base.replace(/\/$/,'')}/textBox/textBox.png')`;
+    
+    // set dropdown toggle button background
+    const dropdownToggle = container.querySelector('.dropdown-toggle');
+    if(dropdownToggle) {
+      dropdownToggle.style.backgroundImage = `url('${base.replace(/\/$/,'')}/buttons/buttonMedium.PNG')`;
+    }
   })();
 
   // Function to update chat box width and height based on text content
@@ -329,8 +335,8 @@ export function mountChat(containerSelector, options = {}){
     chatBox.style.width = `${Math.min(calculatedWidth, maxWidth)}px`;
     
     // Calculate and set height: text height + padding + extra space for taller box
-    const minHeight = 280; // Increased minimum height
-    const calculatedHeight = Math.max(textHeight + 80, minHeight); // padding top/bottom = 50px + 30px extra
+    const minHeight = 350; // Increased minimum height for taller textbox
+    const calculatedHeight = Math.max(textHeight + 100, minHeight); // padding top/bottom = 70px + 30px extra
     chatBox.style.minHeight = `${calculatedHeight}px`;
     chatBox.style.height = 'auto'; // Allow natural expansion
     
