@@ -38,6 +38,7 @@ export function mountChat(containerSelector, options = {}){
       </button>
     </div>
 
+    <div class="choices-overlay hidden"></div>
     <div class="choices hidden"></div>
 
     <div class="history-overlay hidden" role="dialog" aria-modal="true">
@@ -57,6 +58,7 @@ export function mountChat(containerSelector, options = {}){
   const lineText = qs('.line-text');
   const btnNext = qs('.btn-next');
   const choicesEl = qs('.choices');
+  const choicesOverlay = qs('.choices-overlay');
   const historyOverlay = qs('.history-overlay');
   const historyList = qs('.history-list');
   const historyClose = qs('.history-close');
@@ -84,6 +86,7 @@ export function mountChat(containerSelector, options = {}){
   // state
   let index = 0; let history = []; let isTyping = false;
   let waitingForClick = false;
+  let waitingForChoiceClick = false; // New: tracks if we're waiting for click to show choices
   let currentStepText = '';
 
   // audio - using animalese.js
@@ -254,22 +257,37 @@ export function mountChat(containerSelector, options = {}){
     // prepare current text (used for click-to-complete)
     currentStepText = step.text || '';
     showAvatar(step.speaker); hideAvatar(step.speaker==='robot'?'duck':'robot');
+    
+    // Hide choices and overlay when starting a new step
+    if(choicesEl) {
+      choicesEl.classList.add('hidden');
+      choicesEl.classList.remove('show');
+    }
+    if(choicesOverlay) {
+      choicesOverlay.classList.add('hidden');
+    }
+    
     // Hide Next button initially (will show after typing completes if needed)
     if(btnNext) btnNext.classList.add('hidden');
+    waitingForChoiceClick = false;
+    waitingForClick = false;
 
     // type the text (user can click during typing to finish immediately)
     await typeLine(step.text);
     // Animalese is already playing from typeLine, no need to call again
     appendHistory({speaker:step.speaker, text:step.text});
 
-    // show choices if present; if not, enable click-to-continue
+    // Handle choices vs. regular dialogue
     if(step.choices){
-      showChoices(step.choices);
+      // Don't show choices yet - wait for user to click text box
+      waitingForChoiceClick = true;
       waitingForClick = false;
       if(btnNext) btnNext.classList.add('hidden');
     } else {
+      // No choices - enable click-to-continue
       choicesEl.classList.add('hidden');
       choicesEl.classList.remove('show');
+      if(choicesOverlay) choicesOverlay.classList.add('hidden');
       // Always wait for user click to continue (no auto-advance)
       if(index < DIALOG.length-1){
         waitingForClick = true;
@@ -280,7 +298,7 @@ export function mountChat(containerSelector, options = {}){
       }
     }
 
-    // after some delay, fade out avatar (unless choices are shown)
+    // after some delay, fade out avatar (unless choices will be shown)
     if(!step.choices){
       setTimeout(()=>hideAvatar(step.speaker), 900);
     }
@@ -291,6 +309,11 @@ export function mountChat(containerSelector, options = {}){
     choicesEl.innerHTML='';
     const bubbleAssets = ['bubblePink.png', 'bubbleYellow.png', 'bubbleBlue.PNG'];
     const tabAssets = ['tabPink.png', 'tabYellow.png', 'tabBlue.png', 'tabGreen.png'];
+    
+    // Show overlay first (darken screen)
+    if(choicesOverlay) {
+      choicesOverlay.classList.remove('hidden');
+    }
     
     // Create a temporary container for measuring text
     const tempContainer = document.createElement('div');
@@ -348,9 +371,26 @@ export function mountChat(containerSelector, options = {}){
     choicesEl.classList.add('show');
     // Hide Next button when choices are shown
     if(btnNext) btnNext.classList.add('hidden');
+    waitingForChoiceClick = false;
   }
 
-  function handleChoice(choice){ appendHistory({speaker:'duck', text:choice.text}); renderInlineDuckLine(choice.text); setTimeout(()=>{ if(choice.feedback) renderStepFromInline({speaker:'robot', text:choice.feedback, then:choice.next}); else renderStep(choice.next); }, 700); }
+  function handleChoice(choice){ 
+    // Hide choices and overlay when choice is made
+    if(choicesEl) {
+      choicesEl.classList.add('hidden');
+      choicesEl.classList.remove('show');
+    }
+    if(choicesOverlay) {
+      choicesOverlay.classList.add('hidden');
+    }
+    
+    appendHistory({speaker:'duck', text:choice.text}); 
+    renderInlineDuckLine(choice.text); 
+    setTimeout(()=>{ 
+      if(choice.feedback) renderStepFromInline({speaker:'robot', text:choice.feedback, then:choice.next}); 
+      else renderStep(choice.next); 
+    }, 700); 
+  }
 
   async function renderInlineDuckLine(text){ showAvatar('duck'); const speakerNames = options.speakerNames || {}; if(speakerLabel) speakerLabel.textContent = speakerNames.duck || 'You'; await typeLine(text); setTimeout(()=>hideAvatar('duck'), 500); }
 
@@ -434,7 +474,16 @@ export function mountChat(containerSelector, options = {}){
         return; // Don't advance to next step yet
       }
 
-      // Second click: if waiting for click to continue (no choices shown), advance to next step
+      // Second click: if waiting for choices to be shown (question fully displayed)
+      if(waitingForChoiceClick){
+        const step = DIALOG[index];
+        if(step && step.choices){
+          showChoices(step.choices);
+          return;
+        }
+      }
+
+      // Second click: if waiting for click to continue (no choices), advance to next step
       if(waitingForClick){
         waitingForClick = false;
         if(index < DIALOG.length-1){
