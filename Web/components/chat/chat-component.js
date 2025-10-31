@@ -289,6 +289,23 @@ export function mountChat(containerSelector, options = {}){
     choicesEl.innerHTML='';
     const bubbleAssets = ['bubblePink.png', 'bubbleYellow.png', 'bubbleBlue.PNG'];
     const tabAssets = ['tabPink.png', 'tabYellow.png', 'tabBlue.png', 'tabGreen.png'];
+    
+    // First, find the longest text to determine button width
+    // Use a canvas to measure text width accurately
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    context.font = '600 22px "Pixelify Sans", sans-serif'; // Match the button font
+    
+    let maxTextWidth = 0;
+    choices.forEach((c) => {
+      const textWidth = context.measureText(c.text).width;
+      if(textWidth > maxTextWidth) maxTextWidth = textWidth;
+    });
+    
+    // Add padding (60px on each side = 120px total) and ensure minimum width
+    const buttonWidth = Math.max(maxTextWidth + 120, 550); // Add padding, min 550px
+    
+    // Now create the actual buttons with consistent width
     choices.forEach((c, idx)=>{
       const b = document.createElement('button');
       b.className='choice-btn';
@@ -298,6 +315,9 @@ export function mountChat(containerSelector, options = {}){
       const assetIndex = idx % tabAssets.length;
       const assetPath = options.assetsPath ? `${options.assetsPath}/tabs/${tabAssets[assetIndex]}` : `./assets/tabs/${tabAssets[assetIndex]}`;
       b.style.backgroundImage = `url('${assetPath}')`;
+      // Set consistent width for all buttons based on longest text
+      b.style.width = `${buttonWidth}px`;
+      b.style.minHeight = '100px';
       choicesEl.appendChild(b);
     });
     choicesEl.classList.remove('hidden');
