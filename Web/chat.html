@@ -25,8 +25,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
-      max-width: 1200px;
-      margin: 0 auto;
+      width: 100%;
       background: transparent;
     }
     
@@ -181,14 +180,16 @@
     }
     
     .message.user .message-bubble {
-      background: rgba(255, 255, 255, 0.2);
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.85);
+      border: 2px solid rgba(255, 255, 255, 0.95);
+      color: #000;
     }
     
     .message.ai .message-bubble {
-      background: rgba(52, 152, 152, 0.7); /* Jade blue transparent */
-      border: 2px solid rgba(52, 152, 152, 0.9);
-      box-shadow: 0 4px 15px rgba(52, 152, 152, 0.3);
+      background: rgba(52, 152, 152, 0.9); /* Jade blue - more opaque */
+      border: 2px solid rgba(52, 152, 152, 1);
+      box-shadow: 0 4px 15px rgba(52, 152, 152, 0.5);
+      color: #fff;
     }
     
     .message.ai .message-bubble::before {
