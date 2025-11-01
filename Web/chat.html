@@ -353,22 +353,28 @@
         script.src = 'https://acedio.github.io/animalese.js/animalese.js';
         script.onload = () => {
           console.log('Script loaded, checking window.animalese...');
-          // Wait a bit for initialization
-          setTimeout(() => {
-            if (window.animalese) {
-              console.log('Animalese loaded successfully:', typeof window.animalese);
-              resolve(window.animalese);
+          // Check immediately (same as chat-component.js)
+          if (window.animalese) {
+            console.log('Animalese loaded successfully:', typeof window.animalese);
+            resolve(window.animalese);
+          } else {
+            console.error('window.animalese is undefined after script load');
+            // Try alternative: maybe it's Animalese (capital A)
+            if (window.Animalese) {
+              console.log('Found Animalese (capital A)');
+              resolve(window.Animalese);
             } else {
-              console.error('window.animalese is undefined after script load');
-              // Try alternative: maybe it's Animalese (capital A)
-              if (window.Animalese) {
-                console.log('Found Animalese (capital A)');
-                resolve(window.Animalese);
-              } else {
-                reject(new Error('Animalese failed to load - window.animalese not found'));
-              }
+              // Give it a tiny delay and check again
+              setTimeout(() => {
+                if (window.animalese) {
+                  console.log('Animalese loaded after delay');
+                  resolve(window.animalese);
+                } else {
+                  reject(new Error('Animalese failed to load - window.animalese not found'));
+                }
+              }, 50);
             }
-          }, 100);
+          }
         };
         script.onerror = (err) => {
           console.error('Failed to load animalese.js script:', err);
@@ -407,42 +413,20 @@
         console.log('Animalese loaded, type:', typeof animalese);
         
         // Generate and play animalese audio for the text
+        // animalese.js returns an Audio object (same as chat-component.js)
         if (typeof animalese === 'function') {
           try {
             console.log('Calling animalese function with text:', text.substring(0, 50) + '...');
             
-            // Try different API formats
-            let audio = null;
+            // Try with options first (pitch adjustment) - same as chat-component.js
+            currentAnimaleseAudio = animalese(text, { pitch: 20 });
+            console.log('Called with options, got:', currentAnimaleseAudio);
             
-            // Try with options first
-            try {
-              audio = animalese(text, { pitch: 20 });
-              console.log('Called with options, got:', audio);
-            } catch (e) {
-              console.log('Options format failed, trying without options:', e);
+            // If that doesn't work, try without options (same fallback as chat-component.js)
+            if (!currentAnimaleseAudio) {
+              currentAnimaleseAudio = animalese(text);
+              console.log('Called without options, got:', currentAnimaleseAudio);
             }
-            
-            // If that didn't work, try without options
-            if (!audio) {
-              try {
-                audio = animalese(text);
-                console.log('Called without options, got:', audio);
-              } catch (e) {
-                console.error('Both API formats failed:', e);
-              }
-            }
-            
-            // If still no audio, try as constructor
-            if (!audio && animalese.constructor) {
-              try {
-                audio = new animalese(text);
-                console.log('Called as constructor, got:', audio);
-              } catch (e) {
-                console.log('Constructor format failed:', e);
-              }
-            }
-            
-            currentAnimaleseAudio = audio;
             
             // Ensure we have an audio object
             if (currentAnimaleseAudio) {
