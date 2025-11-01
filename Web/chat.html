@@ -341,33 +341,54 @@
     async function loadAnimalese() {
       // Check if animalese is already loaded
       if (window.animalese) {
+        console.log('Animalese already loaded:', typeof window.animalese);
         return window.animalese;
       }
       
       // Load animalese.js if not already loaded
       return new Promise((resolve, reject) => {
-        if (window.animalese) {
-          resolve(window.animalese);
-          return;
-        }
+        console.log('Loading animalese.js...');
         
         const script = document.createElement('script');
         script.src = 'https://acedio.github.io/animalese.js/animalese.js';
         script.onload = () => {
-          if (window.animalese) {
-            resolve(window.animalese);
-          } else {
-            reject(new Error('Animalese failed to load'));
-          }
+          console.log('Script loaded, checking window.animalese...');
+          // Wait a bit for initialization
+          setTimeout(() => {
+            if (window.animalese) {
+              console.log('Animalese loaded successfully:', typeof window.animalese);
+              resolve(window.animalese);
+            } else {
+              console.error('window.animalese is undefined after script load');
+              // Try alternative: maybe it's Animalese (capital A)
+              if (window.Animalese) {
+                console.log('Found Animalese (capital A)');
+                resolve(window.Animalese);
+              } else {
+                reject(new Error('Animalese failed to load - window.animalese not found'));
+              }
+            }
+          }, 100);
         };
-        script.onerror = () => reject(new Error('Failed to load animalese.js'));
+        script.onerror = (err) => {
+          console.error('Failed to load animalese.js script:', err);
+          reject(new Error('Failed to load animalese.js'));
+        };
         document.head.appendChild(script);
       });
     }
     
     async function playAnimalese(text = '') {
+      console.log('playAnimalese called with text:', text);
+      
       // Check if muted
-      if (window.animaleseMuted || !text) {
+      if (window.animaleseMuted) {
+        console.log('Animalese is muted');
+        return;
+      }
+      
+      if (!text || text.trim() === '') {
+        console.log('No text provided');
         return;
       }
       
@@ -381,49 +402,95 @@
         }
         
         // Load animalese if needed
+        console.log('Loading animalese...');
         const animalese = await loadAnimalese();
+        console.log('Animalese loaded, type:', typeof animalese);
         
         // Generate and play animalese audio for the text
         if (typeof animalese === 'function') {
           try {
-            // Generate audio - animalese.js returns an Audio object
-            currentAnimaleseAudio = animalese(text, { pitch: 20 });
+            console.log('Calling animalese function with text:', text.substring(0, 50) + '...');
+            
+            // Try different API formats
+            let audio = null;
+            
+            // Try with options first
+            try {
+              audio = animalese(text, { pitch: 20 });
+              console.log('Called with options, got:', audio);
+            } catch (e) {
+              console.log('Options format failed, trying without options:', e);
+            }
             
             // If that didn't work, try without options
-            if (!currentAnimaleseAudio) {
-              currentAnimaleseAudio = animalese(text);
+            if (!audio) {
+              try {
+                audio = animalese(text);
+                console.log('Called without options, got:', audio);
+              } catch (e) {
+                console.error('Both API formats failed:', e);
+              }
             }
+            
+            // If still no audio, try as constructor
+            if (!audio && animalese.constructor) {
+              try {
+                audio = new animalese(text);
+                console.log('Called as constructor, got:', audio);
+              } catch (e) {
+                console.log('Constructor format failed:', e);
+              }
+            }
+            
+            currentAnimaleseAudio = audio;
             
             // Ensure we have an audio object
             if (currentAnimaleseAudio) {
+              console.log('Audio object created:', currentAnimaleseAudio);
+              console.log('Audio type:', currentAnimaleseAudio.constructor.name);
+              
               // Set volume
               if (currentAnimaleseAudio.volume !== undefined) {
                 currentAnimaleseAudio.volume = 0.7;
+                console.log('Volume set to 0.7');
               }
               
               // Try to play - handle autoplay restrictions
               try {
+                console.log('Attempting to play audio...');
                 const playPromise = currentAnimaleseAudio.play();
                 if (playPromise !== undefined) {
                   await playPromise;
-                  console.log('Animalese playing successfully');
+                  console.log('✅ Animalese playing successfully!');
+                } else {
+                  console.log('Play promise was undefined, audio may have started');
                 }
               } catch (playError) {
-                // If autoplay is blocked, try to resume audio context
-                console.warn('Autoplay blocked, attempting to resume:', playError);
-                // User interaction required
+                console.error('❌ Play error:', playError);
+                console.error('Error details:', {
+                  name: playError.name,
+                  message: playError.message,
+                  code: playError.code
+                });
               }
             } else {
-              console.warn('Animalese function did not return audio object');
+              console.error('❌ Animalese function did not return audio object');
+              console.log('Returned value:', audio);
             }
           } catch (err) {
-            console.error('Error generating animalese audio:', err);
+            console.error('❌ Error generating animalese audio:', err);
+            console.error('Error stack:', err.stack);
           }
         } else {
-          console.warn('Animalese is not a function:', typeof animalese);
+          console.error('❌ Animalese is not a function. Type:', typeof animalese);
+          console.log('Value:', animalese);
+          // Log what's actually in window
+          console.log('window.animalese:', window.animalese);
+          console.log('window.Animalese:', window.Animalese);
         }
       } catch (error) {
-        console.error('Animalese audio error:', error);
+        console.error('❌ Animalese audio error:', error);
+        console.error('Error stack:', error.stack);
       }
     }
     
