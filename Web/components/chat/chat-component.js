@@ -664,9 +664,9 @@ export function mountChat(containerSelector, options = {}){
     showAvatar('duck'); 
     const speakerNames = options.speakerNames || {}; 
     if(speakerLabel) speakerLabel.textContent = speakerNames.duck || 'You'; 
-    
+    currentSpeaker = 'duck'; // Set speaker for Isabella-like pitch
     // Type the duck's text
-    await typeLine(text);
+    await typeLine(text, 'duck');
     
     // Keep duck visible - will hide when user clicks to proceed
     // Don't hide avatar immediately, wait for user click
