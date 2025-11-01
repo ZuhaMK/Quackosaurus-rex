@@ -10,54 +10,13 @@ class PageTransitionManager {
   }
 
   init() {
-    // Intercept all navigation
-    this.interceptNavigation();
-    
     // Add fade-in on page load
     this.fadeIn();
   }
 
-  interceptNavigation() {
-    // Override window.location.href setter
-    let originalLocation = window.location;
-    Object.defineProperty(window, 'location', {
-      get: function() {
-        return originalLocation;
-      },
-      set: function(url) {
-        if (typeof url === 'string' && url !== window.location.href) {
-          // Check if it's an internal navigation
-          if (!url.startsWith('http') && !url.startsWith('#') && !url.startsWith('javascript:')) {
-            window.pageTransitionManager?.navigateWithTransition(url);
-            return;
-          }
-        }
-        originalLocation.href = url;
-      }
-    });
-
-    // Intercept direct location.href assignments
-    const originalHrefSetter = Object.getOwnPropertyDescriptor(window.location, 'href').set;
-    Object.defineProperty(window.location, 'href', {
-      set: function(url) {
-        if (typeof url === 'string' && url !== window.location.href) {
-          // Check if it's an internal navigation
-          if (!url.startsWith('http') && !url.startsWith('#') && !url.startsWith('javascript:')) {
-            window.pageTransitionManager?.navigateWithTransition(url);
-            return;
-          }
-        }
-        originalHrefSetter.call(window.location, url);
-      },
-      get: function() {
-        return originalLocation.href;
-      }
-    });
-  }
-
   fadeOut() {
     return new Promise((resolve) => {
-      // Create overlay for fade effect
+      // Create overlay for fade effect - fade to BLACK
       const overlay = document.createElement('div');
       overlay.id = 'page-transition-overlay';
       overlay.style.cssText = `
@@ -67,69 +26,67 @@ class PageTransitionManager {
         width: 100%;
         height: 100%;
         background: rgba(0, 0, 0, 0);
-        z-index: 10000;
-        pointer-events: none;
+        z-index: 99999;
+        pointer-events: auto;
         transition: background ${this.transitionDuration}ms ease-out;
       `;
       
       document.body.appendChild(overlay);
       
-      // Trigger fade
+      // Force black background immediately, then fade
       requestAnimationFrame(() => {
-        overlay.style.background = 'rgba(0, 0, 0, 1)';
+        requestAnimationFrame(() => {
+          overlay.style.background = 'rgba(0, 0, 0, 1)';
+          setTimeout(() => {
+            resolve();
+          }, this.transitionDuration);
+        });
       });
-      
-      setTimeout(() => {
-        resolve();
-      }, this.transitionDuration);
     });
   }
 
   fadeIn() {
-    // Check if we came from a transition
-    const overlay = document.getElementById('page-transition-overlay');
-    if (overlay) {
-      // Fade in from black
-      overlay.style.transition = `background ${this.transitionDuration}ms ease-out`;
-      overlay.style.background = 'rgba(0, 0, 0, 1)';
+    // Check if we came from a transition (stored in sessionStorage)
+    const fromTransition = sessionStorage.getItem('pageTransition') === 'true';
+    
+    if (fromTransition) {
+      // Clear the flag
+      sessionStorage.removeItem('pageTransition');
       
-      requestAnimationFrame(() => {
-        overlay.style.background = 'rgba(0, 0, 0, 0)';
-        setTimeout(() => {
-          overlay.remove();
-        }, this.transitionDuration);
-      });
-    } else {
-      // Create initial fade-in overlay
-      const initialOverlay = document.createElement('div');
-      initialOverlay.style.cssText = `
+      // Create overlay starting from black
+      const overlay = document.createElement('div');
+      overlay.id = 'page-transition-overlay';
+      overlay.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
         background: rgba(0, 0, 0, 1);
-        z-index: 10000;
+        z-index: 99999;
         pointer-events: none;
-        transition: opacity ${this.transitionDuration}ms ease-out;
+        transition: background ${this.transitionDuration}ms ease-out;
       `;
       
-      document.body.appendChild(initialOverlay);
+      document.body.appendChild(overlay);
       
+      // Fade in from black to transparent
       requestAnimationFrame(() => {
-        initialOverlay.style.opacity = '0';
-        setTimeout(() => {
-          initialOverlay.remove();
-        }, this.transitionDuration);
+        requestAnimationFrame(() => {
+          overlay.style.background = 'rgba(0, 0, 0, 0)';
+          setTimeout(() => {
+            overlay.remove();
+          }, this.transitionDuration);
+        });
       });
     }
   }
 
   navigateWithTransition(url) {
-    // Store URL in sessionStorage for fade-in on next page
+    // Store flag in sessionStorage for fade-in on next page
     sessionStorage.setItem('pageTransition', 'true');
     
-    // Fade out current page
+    // Fade out current page to black
     this.fadeOut().then(() => {
       // Navigate after fade completes
       window.location.href = url;
