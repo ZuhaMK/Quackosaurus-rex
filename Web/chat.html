@@ -679,7 +679,11 @@
         }
         
         if (action === 'go-back') {
-          window.location.href = 'bankReception.html';
+          if (window.navigateWithTransition) {
+            window.navigateWithTransition('bankReception.html');
+          } else {
+            window.location.href = 'bankReception.html';
+          }
         } else if (action === 'mute') {
           // Toggle mute for ALL audio (animalese, button sounds, BGM)
           window.animaleseMuted = !window.animaleseMuted;
