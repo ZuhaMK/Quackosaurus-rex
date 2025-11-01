@@ -311,7 +311,7 @@
         <button class="menu-button" id="menuButton">☰ Menu</button>
         <div class="dropdown-content" id="dropdownContent">
           <div class="dropdown-item" data-action="go-back">Go Back to Options</div>
-          <div class="dropdown-item" data-action="mute">Mute Music</div>
+          <div class="dropdown-item" data-action="mute">🔊 Mute Music</div>
         </div>
       </div>
     </div>
@@ -502,6 +502,11 @@
     }
     
     function playButtonHoverSound() {
+      // Check if muted
+      if (window.animaleseMuted) {
+        return;
+      }
+      
       try {
         const ctx = initAudioContext();
         if (!ctx) return;
@@ -519,6 +524,11 @@
     }
     
     function playButtonClickSound() {
+      // Check if muted
+      if (window.animaleseMuted) {
+        return;
+      }
+      
       try {
         const ctx = initAudioContext();
         if (!ctx) return;
@@ -556,13 +566,34 @@
       item.addEventListener('click', (e) => {
         const action = item.getAttribute('data-action');
         dropdownContent.classList.remove('show');
-        playButtonClickSound();
+        
+        // Don't play sound if we're muting (would be ironic!)
+        if (action !== 'mute') {
+          playButtonClickSound();
+        }
         
         if (action === 'go-back') {
           window.location.href = 'bankReception.html';
         } else if (action === 'mute') {
+          // Toggle mute for ALL audio (animalese, button sounds)
           window.animaleseMuted = !window.animaleseMuted;
-          item.textContent = window.animaleseMuted ? 'Unmute Music' : 'Mute Music';
+          
+          // Stop all currently playing animalese audio
+          if (currentAnimaleseAudio && !currentAnimaleseAudio.paused) {
+            currentAnimaleseAudio.pause();
+            currentAnimaleseAudio.currentTime = 0;
+          }
+          
+          // Update button text and add visual indicator
+          if (window.animaleseMuted) {
+            item.textContent = '🔇 Unmute Music';
+            item.style.opacity = '0.7';
+            item.style.fontWeight = '700';
+          } else {
+            item.textContent = '🔊 Mute Music';
+            item.style.opacity = '1';
+            item.style.fontWeight = '600';
+          }
         }
       });
     });

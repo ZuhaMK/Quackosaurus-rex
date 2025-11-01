@@ -173,6 +173,10 @@
       speakerNames: {
         robot: 'Dino Receptionist',
         duck: 'You'
+      },
+      goBackCallback: function() {
+        // Show service options instead of navigating away
+        showServiceOptions();
       }
     });
 
@@ -296,6 +300,11 @@
     }
     
     function playButtonHoverSound() {
+      // Check if muted
+      if (window.animaleseMuted) {
+        return;
+      }
+      
       try {
         const ctx = initAudioContext();
         if (!ctx) return;
@@ -321,6 +330,11 @@
     }
     
     function playButtonClickSound() {
+      // Check if muted
+      if (window.animaleseMuted) {
+        return;
+      }
+      
       try {
         const ctx = initAudioContext();
         if (!ctx) return;
