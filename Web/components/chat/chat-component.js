@@ -565,6 +565,8 @@ export function mountChat(containerSelector, options = {}){
       
       // Add click handler with sound effect
       b.addEventListener('click', (e) => {
+        // Initialize audio context on click (user interaction)
+        initAudioContext();
         playButtonClickSound();
         handleChoice(c);
       });
