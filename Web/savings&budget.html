@@ -226,7 +226,7 @@
       dialog: SAVINGS_DIALOG,
       assetsPath: './assets',
       speakerNames: {
-        robot: 'Budget Advisor',
+        robot: 'Momo',
         duck: 'You'
       },
       goBackUrl: 'bankReception.html'
@@ -237,12 +237,12 @@
     if (container) {
       const bg = container.querySelector('.background');
       if (bg) {
-        bg.style.background = 'linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("./assets/backgrounds/LivingRoom.jpeg") center/cover no-repeat';
+        bg.style.background = 'linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("./assets/backgrounds/SavingsRoom.jpeg") center/cover no-repeat';
       }
-      // Use dino for advisor
+      // Use robot (Momo) for advisor
       const leftAvatar = container.querySelector('.avatar.left');
       if (leftAvatar) {
-        leftAvatar.style.backgroundImage = 'url("./assets/characters/dino.GIF")';
+        leftAvatar.style.backgroundImage = 'url("./assets/characters/robot.GIF")';
       }
       const rightAvatar = container.querySelector('.avatar.right');
       if (rightAvatar) {

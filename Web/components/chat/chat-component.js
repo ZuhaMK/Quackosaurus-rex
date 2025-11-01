@@ -294,14 +294,21 @@ export function mountChat(containerSelector, options = {}){
           // Speed up audio playback (faster animalese)
           audio.playbackRate = 1.3; // 30% faster
           
-          // Hide avatar when audio ends (stop GIF animation)
-          audio.addEventListener('ended', () => {
-            if (speaker) {
-              hideAvatar(speaker);
-            }
-          });
           
           currentAnimaleseAudio = audio;
+          
+          // Store audio duration for external tracking
+          audio.addEventListener('loadedmetadata', () => {
+            // Audio metadata loaded, duration available
+          });
+          
+          // Emit event when audio ends for external listeners
+          audio.addEventListener('ended', () => {
+            // Dispatch custom event for external listeners (e.g., bankReception.html)
+            window.dispatchEvent(new CustomEvent('animaleseAudioEnded', { 
+              detail: { speaker: speaker } 
+            }));
+          });
           
           // Play the audio
           const playPromise = currentAnimaleseAudio.play();
@@ -545,10 +552,8 @@ export function mountChat(containerSelector, options = {}){
       }
     }
 
-    // after some delay, fade out avatar (unless choices will be shown)
-    if(!step.choices){
-      setTimeout(()=>hideAvatar(step.speaker), 900);
-    }
+    // Don't auto-hide avatar - keep it visible until user clicks to advance
+    // Avatar will hide when moving to next step or when audio ends (but stays visible until next click)
   }
 
   function showChoices(choices){ 
@@ -794,6 +799,11 @@ export function mountChat(containerSelector, options = {}){
       initAudioContext();
       playButtonClickSound();
       if(waitingForClick && index < DIALOG.length-1){
+        // Hide current speaker before moving to next step
+        const currentStep = DIALOG[index];
+        if(currentStep && currentStep.speaker){
+          hideAvatar(currentStep.speaker);
+        }
         waitingForClick = false;
         renderStep(index+1);
       }
@@ -829,7 +839,10 @@ export function mountChat(containerSelector, options = {}){
       if(action === 'go-back'){
         // Go back to options page - check if there's a custom goBack callback
         if(options.goBackCallback && typeof options.goBackCallback === 'function'){
+          // Call the callback to show service options
           options.goBackCallback();
+          // Don't reset dialogue index - just show the options
+          return;
         } else if(options.goBackUrl){
           if (window.navigateWithTransition) {
             window.navigateWithTransition(options.goBackUrl);
@@ -917,6 +930,7 @@ export function mountChat(containerSelector, options = {}){
       }
 
       // Second click: if waiting for click to continue (no choices), advance to next step
+      // Don't hide avatar here - will hide when next button is clicked
       if(waitingForClick){
         waitingForClick = false;
         if(index < DIALOG.length-1){
