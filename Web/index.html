@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quackosaurus-rex: Financial Adventure</title>
+    <link rel="icon" type="image/x-icon" href="DuckLord.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="DuckLord.ico">
+    <link rel="apple-touch-icon" href="DuckLord.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Jersey 10', sans-serif;
+            font-weight: 900;
+            overflow: hidden;
+        }
+        .landing-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('assets/backgrounds/HouseOutside.jpeg') center/cover no-repeat;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 1s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: #fff;
+            text-align: center;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
+            margin-bottom: 3rem;
+            animation: slideDown 1s ease-out;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .enter-button {
+            font-size: 1.8rem;
+            font-weight: 700;
+            padding: 1.2rem 3rem;
+            background: transparent;
+            background-image: url('assets/buttons/buttonLong.PNG');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            color: #000;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            box-shadow: none;
+            transition: transform 0.2s ease, filter 0.2s ease;
+            animation: slideUp 1s ease-out 0.3s both;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .enter-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            filter: brightness(1.1);
+        }
+        .enter-button:active {
+            transform: translateY(-2px) scale(0.98);
+            filter: brightness(0.95);
+        }
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+                padding: 0 1rem;
+            }
+            .enter-button {
+                font-size: 1.2rem;
+                padding: 1rem 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="landing-container">
+        <h1 class="title">Quackosaurus-rex:<br>Your Financial Adventure Awaits!</h1>
+        <button class="enter-button" id="enterButton">
+            Enter the Bank
+        </button>
+    </div>
+
+    <script type="module">
+        // Import Page Transitions
+        import './components/transitions/page-transitions.js';
+        // Import BGM Manager
+        import './components/bgm/bgm-manager.js';
+        
+        // Wait for DOM and BGM manager to be ready
+        window.addEventListener('DOMContentLoaded', () => {
+            // Wait a bit for BGM manager to initialize
+            setTimeout(() => {
+                if (window.bgmManager) {
+                    window.bgmManager.play('./assets/bgm/01 Main Theme _ Towballs Crossing.mp3', 0.7);
+                }
+            }, 100);
+        });
+        
+        // Fade out BGM when leaving page
+        window.addEventListener('beforeunload', () => {
+            if (window.bgmManager) {
+                window.bgmManager.fadeOut();
+            }
+        });
+    </script>
+    
+    <script>
+        // Button sound effects using Web Audio API
+        let audioContext = null;
+        
+        function initAudioContext() {
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.debug('Audio context initialization failed:', e);
+                    return null;
+                }
+            }
+            // Resume audio context if suspended (required for user interaction)
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            return audioContext;
+        }
+        
+        function playButtonHoverSound() {
+            try {
+                const ctx = initAudioContext();
+                if (!ctx) return;
+                
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                // Higher pitch, short sound for hover
+                oscillator.frequency.value = 600;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                
+                oscillator.start(ctx.currentTime);
+                oscillator.stop(ctx.currentTime + 0.1);
+            } catch (e) {
+                console.debug('Button hover sound unavailable:', e);
+            }
+        }
+        
+        function playButtonClickSound() {
+            try {
+                const ctx = initAudioContext();
+                if (!ctx) return;
+                
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                // Lower pitch, slightly longer sound for click
+                oscillator.frequency.value = 400;
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                
+                oscillator.start(ctx.currentTime);
+                oscillator.stop(ctx.currentTime + 0.15);
+            } catch (e) {
+                console.debug('Button click sound unavailable:', e);
+            }
+        }
+
+        // Add hover and click sound effects to enter button
+        const enterButton = document.getElementById('enterButton');
+        if (enterButton) {
+            enterButton.addEventListener('mouseenter', playButtonHoverSound);
+            enterButton.addEventListener('click', (e) => {
+                playButtonClickSound();
+                setTimeout(() => {
+                    if (window.navigateWithTransition) {
+                        window.navigateWithTransition('bankReception.html');
+                    } else {
+                        window.location.href = 'bankReception.html';
+                    }
+                }, 150);
+            });
+        }
+    </script>
+</body>
+</html>

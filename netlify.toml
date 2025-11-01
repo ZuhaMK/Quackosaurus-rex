@@ -1,0 +1,30 @@
+[build]
+  publish = "Web"
+  command = ""
+
+# Redirect root to index.html (which is a copy of startPage.html)
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+# Optional: redirects for cleaner URLs
+[[redirects]]
+  from = "/bank"
+  to = "/bankReception.html"
+  status = 200
+
+[[redirects]]
+  from = "/chat"
+  to = "/chat.html"
+  status = 200
+
+# Fallback for 404 errors
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 404
+
+[build.environment]
+  PYTHON_VERSION = "3.9"
+
