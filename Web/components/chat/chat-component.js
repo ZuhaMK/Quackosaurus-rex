@@ -90,6 +90,7 @@ export function mountChat(containerSelector, options = {}){
   let waitingForDuckClick = false; // Tracks if we're waiting for click after duck's selection
   let pendingChoice = null; // Stores the choice to process after duck click
   let currentStepText = '';
+  let currentSpeaker = 'robot'; // Track current speaker for animalese pitch adjustment
 
   // audio - using animalese.js
   let currentAnimaleseAudio = null;
@@ -231,7 +232,7 @@ export function mountChat(containerSelector, options = {}){
     return;
   }
 
-  async function playLineAudio(text = ''){
+  async function playLineAudio(text = '', speaker = 'robot'){
     // Check if muted
     if (window.animaleseMuted) {
       return;
@@ -258,8 +259,9 @@ export function mountChat(containerSelector, options = {}){
       // animalese.Animalese(text, shorten, pitch) returns a RIFFWAVE object with dataURI property
       if (animalese && animalese.Animalese) {
         try {
-          // Generate WAV: Animalese(text, shorten=false, pitch=1.0)
-          const pitch = 1.0; // Default pitch
+          // Adjust pitch based on speaker: duck (Isabella-like) = higher pitch, robot = default
+          // Higher pitch value = higher/faster sound (Isabella)
+          const pitch = speaker === 'duck' ? 1.5 : 1.0; // Isabella-like pitch for duck
           const wavObject = animalese.Animalese(text, false, pitch);
           
           // The method returns a RIFFWAVE object, we need the dataURI property
@@ -278,6 +280,8 @@ export function mountChat(containerSelector, options = {}){
           // Create Audio object from the WAV data URI
           const audio = new Audio();
           audio.src = wavDataUri;
+          // Speed up audio playback (faster animalese)
+          audio.playbackRate = 1.3; // 30% faster
           
           currentAnimaleseAudio = audio;
           
@@ -404,7 +408,7 @@ export function mountChat(containerSelector, options = {}){
     chatBox.style.transform = 'translateX(-50%)';
   }
   
-  async function typeLine(text){ 
+  async function typeLine(text, speaker = currentSpeaker){ 
     isTyping = true; 
     if(!lineText) return; 
     lineText.textContent = '';
@@ -412,10 +416,10 @@ export function mountChat(containerSelector, options = {}){
     // Update chat box size based on text
     updateChatBoxSize(text);
     
-    // Start playing animalese audio for the full text
-    playLineAudio(text);
+    // Start playing animalese audio for the full text (with speaker info)
+    playLineAudio(text, speaker);
     
-    // Type character by character with slower speed (50-100ms per character)
+    // Type character by character with faster speed (20-40ms per character)
     for(let i=0;i<text.length;i++){ 
       // Check if user clicked to skip (handled by main click handler)
       if (!isTyping) {
@@ -425,8 +429,8 @@ export function mountChat(containerSelector, options = {}){
         break;
       }
       lineText.textContent += text[i]; 
-      // Slower typing speed: 50-100ms per character (was 28-68ms)
-      await new Promise(r=>setTimeout(r, 50 + Math.random()*50)); 
+      // Faster typing speed: 20-40ms per character (was 50-100ms)
+      await new Promise(r=>setTimeout(r, 20 + Math.random()*20)); 
     }
     
     // Ensure full text is shown
@@ -463,8 +467,11 @@ export function mountChat(containerSelector, options = {}){
     waitingForChoiceClick = false;
     waitingForClick = false;
 
+    // Update current speaker for animalese pitch
+    currentSpeaker = step.speaker;
+    
     // type the text (user can click during typing to finish immediately)
-    await typeLine(step.text);
+    await typeLine(step.text, step.speaker);
     // Animalese is already playing from typeLine, no need to call again
     appendHistory({speaker:step.speaker, text:step.text});
 
@@ -665,7 +672,7 @@ export function mountChat(containerSelector, options = {}){
     // Don't hide avatar immediately, wait for user click
   }
 
-  async function renderStepFromInline(obj){ showAvatar(obj.speaker); const speakerNames = options.speakerNames || {}; const robotName = speakerNames.robot || 'QuackBot'; if(speakerLabel) speakerLabel.textContent = obj.speaker === 'robot' ? robotName : 'You'; await typeLine(obj.text); appendHistory({speaker:obj.speaker, text:obj.text}); setTimeout(()=>hideAvatar(obj.speaker),700); setTimeout(()=>renderStep(obj.then),700); }
+  async function renderStepFromInline(obj){ showAvatar(obj.speaker); const speakerNames = options.speakerNames || {}; const robotName = speakerNames.robot || 'QuackBot'; if(speakerLabel) speakerLabel.textContent = obj.speaker === 'robot' ? robotName : 'You'; currentSpeaker = obj.speaker; await typeLine(obj.text, obj.speaker); appendHistory({speaker:obj.speaker, text:obj.text}); setTimeout(()=>hideAvatar(obj.speaker),700); setTimeout(()=>renderStep(obj.then),700); }
 
   function renderHistoryList(){ if(!historyList) return; historyList.innerHTML = ''; history.forEach(h=>{ const it = document.createElement('div'); it.className='history-item ' + (h.speaker==='robot'?'robot':'duck'); const av = document.createElement('div'); av.className='history-avatar'; av.textContent = h.speaker==='robot' ? 'R':'D'; const b = document.createElement('div'); b.className='history-bubble'; b.textContent = h.text; it.appendChild(av); it.appendChild(b); historyList.appendChild(it); }); }
 
