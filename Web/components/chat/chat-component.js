@@ -24,7 +24,7 @@ export function mountChat(containerSelector, options = {}){
       <div class="dropdown-content">
         <div class="dropdown-item" data-action="go-back">Go Back to Options</div>
         <div class="dropdown-item" data-action="history">Chat History</div>
-        <div class="dropdown-item" data-action="mute">Mute Music</div>
+        <div class="dropdown-item" data-action="mute">🔊 Mute Music</div>
       </div>
     </div>
 
@@ -747,6 +747,11 @@ export function mountChat(containerSelector, options = {}){
     item.addEventListener('click', (e)=>{
       const action = item.getAttribute('data-action');
       dropdownContent.classList.remove('show');
+      
+      // Don't play sound if we're muting (would be ironic!)
+      if (action !== 'mute') {
+        playButtonClickSound();
+      }
       
       if(action === 'go-back'){
         // Go back to options page - check if there's a custom goBack callback
