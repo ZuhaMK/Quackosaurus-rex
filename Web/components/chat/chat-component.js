@@ -774,6 +774,11 @@ export function mountChat(containerSelector, options = {}){
           currentAnimaleseAudio.currentTime = 0;
         }
         
+        // Control BGM
+        if(window.bgmManager){
+          window.bgmManager.setMuted(window.animaleseMuted);
+        }
+        
         // Update button text and add visual indicator
         if(window.animaleseMuted){
           item.textContent = '🔇 Unmute Music';
