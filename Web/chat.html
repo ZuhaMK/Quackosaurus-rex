@@ -830,17 +830,18 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
           }, { once: true });
           
-          // Type out the response
+          // Type out the response with markdown rendering
           for (let i = 0; i < reply.length; i++) {
             if (!isTyping) break;
-            bubble.textContent = reply.substring(0, i + 1);
+            const partialText = reply.substring(0, i + 1);
+            bubble.innerHTML = renderMarkdown(partialText, false);
             await new Promise(r => setTimeout(r, 20));
             chatMessages.scrollTop = chatMessages.scrollHeight;
           }
           
           // Ensure full text is shown if typing was stopped
-          if (!isTyping && bubble.textContent !== reply) {
-            bubble.textContent = reply;
+          if (!isTyping) {
+            bubble.innerHTML = renderMarkdown(reply, false);
           }
         }
       } catch (error) {
