@@ -825,8 +825,8 @@
               window.currentAnimaleseAudio.pause();
               window.currentAnimaleseAudio.currentTime = 0;
             }
-            // Show full text immediately
-            bubble.textContent = reply;
+            // Show full text immediately with markdown rendering
+            bubble.innerHTML = renderMarkdown(reply, false);
             chatMessages.scrollTop = chatMessages.scrollHeight;
           }, { once: true });
           
