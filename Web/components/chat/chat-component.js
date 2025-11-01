@@ -89,6 +89,7 @@ export function mountChat(containerSelector, options = {}){
   let waitingForChoiceClick = false; // New: tracks if we're waiting for click to show choices
   let waitingForDuckClick = false; // Tracks if we're waiting for click after duck's selection
   let pendingChoice = null; // Stores the choice to process after duck click
+  let currentStepWithChoices = null; // Track which step had the choices (to find next step after feedbacks)
   let currentStepText = '';
   let currentSpeaker = 'robot'; // Track current speaker for animalese pitch adjustment
 
@@ -627,8 +628,9 @@ export function mountChat(containerSelector, options = {}){
     // Show and type the duck's selected option text
     await renderInlineDuckLine(choice.text);
     
-    // Store the choice and wait for user to click textbox before proceeding
+    // Store the choice and current step, wait for user to click textbox before proceeding
     pendingChoice = choice;
+    currentStepWithChoices = DIALOG[index]; // Store the step that had choices
     waitingForDuckClick = true;
     
     // Show Next button to indicate user can click to proceed
@@ -654,10 +656,30 @@ export function mountChat(containerSelector, options = {}){
     
     // Now proceed to the next step (robot's response)
     if(choice.feedback) {
-      await renderStepFromInline({speaker:'robot', text:choice.feedback, then:choice.next});
+      // Show feedback inline, then skip the duplicate feedback step
+      let nextStepIndex = choice.next;
+      
+      // Check if the next step has the same text as feedback (it's a duplicate feedback step)
+      // If so, skip it and go to the one after
+      if (nextStepIndex < DIALOG.length) {
+        const nextStep = DIALOG[nextStepIndex];
+        if (nextStep && nextStep.text === choice.feedback) {
+          // This is the duplicate feedback step, skip it
+          nextStepIndex = nextStepIndex + 1;
+          // Ensure we don't go out of bounds
+          if (nextStepIndex >= DIALOG.length) {
+            nextStepIndex = DIALOG.length - 1;
+          }
+        }
+      }
+      
+      await renderStepFromInline({speaker:'robot', text:choice.feedback, then:nextStepIndex});
     } else {
       renderStep(choice.next);
     }
+    
+    // Clear the stored step
+    currentStepWithChoices = null;
   }
 
   async function renderInlineDuckLine(text){ 
