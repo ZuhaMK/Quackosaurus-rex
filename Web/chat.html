@@ -643,12 +643,23 @@
     // Initialize mute state
     window.animaleseMuted = false;
     
-    // Play animalese for initial greeting
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        playAnimalese("Hi! I'm Dr. GPT, your AI Financial Consultant! Ask me anything about finances!");
-      }, 500);
-    });
+    // Audio context unlock - required for autoplay
+    let audioUnlocked = false;
+    function unlockAudio() {
+      if (!audioUnlocked) {
+        audioUnlocked = true;
+        initAudioContext();
+        // Try to play greeting after unlocking
+        setTimeout(() => {
+          playAnimalese("Hi! I'm Dr. GPT, your AI Financial Consultant! Ask me anything about finances!");
+        }, 300);
+      }
+    }
+    
+    // Unlock audio on any user interaction
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('keypress', unlockAudio, { once: true });
+    chatInput.addEventListener('focus', unlockAudio, { once: true });
   </script>
 </body>
 </html>
