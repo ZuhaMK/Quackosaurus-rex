@@ -625,6 +625,13 @@
     
     // Initialize mute state
     window.animaleseMuted = false;
+    
+    // Play animalese for initial greeting
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        playAnimalese("Hi! I'm Dr. GPT, your AI Financial Consultant! Ask me anything about finances!");
+      }, 500);
+    });
   </script>
 </body>
 </html>
