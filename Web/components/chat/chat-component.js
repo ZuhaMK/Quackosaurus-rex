@@ -165,42 +165,57 @@ export function mountChat(containerSelector, options = {}){
     }
   }
   
+  // Store the initialized animalese instance
+  let animaleseInstance = null;
+  
   async function loadAnimalese() {
-    // Check if animalese is already loaded
-    if (window.animalese) {
-      return window.animalese;
+    // Check if already initialized
+    if (animaleseInstance) {
+      return animaleseInstance;
     }
     
-    // Load animalese.js if not already loaded
+    // Load required dependencies
     return new Promise((resolve, reject) => {
-      if (window.animalese) {
-        resolve(window.animalese);
-        return;
+      // Load riffwave.js first (required dependency)
+      if (!window.RIFFWAVE) {
+        const riffwaveScript = document.createElement('script');
+        riffwaveScript.src = 'https://acedio.github.io/animalese.js/riffwave.js';
+        riffwaveScript.onload = () => {
+          loadAnimaleseScript();
+        };
+        riffwaveScript.onerror = () => reject(new Error('Failed to load riffwave.js'));
+        document.head.appendChild(riffwaveScript);
+      } else {
+        loadAnimaleseScript();
       }
       
-      const script = document.createElement('script');
-      script.src = 'https://acedio.github.io/animalese.js/animalese.js';
-      script.onload = () => {
-        // Wait a bit for the script to initialize window.animalese
-        const checkAnimalese = (attempts = 10) => {
-          if (window.animalese) {
-            resolve(window.animalese);
-          } else if (window.Animalese) {
-            // Try capital A variant
-            resolve(window.Animalese);
-          } else if (attempts > 0) {
-            // Wait a bit more and try again
-            setTimeout(() => checkAnimalese(attempts - 1), 100);
-          } else {
-            // Final check - log what's actually available
-            console.error('Animalese not found. Available globals:', Object.keys(window).filter(k => k.toLowerCase().includes('animal')));
-            reject(new Error('Animalese failed to load - window.animalese not found after initialization'));
-          }
-        };
-        checkAnimalese();
-      };
-      script.onerror = () => reject(new Error('Failed to load animalese.js'));
-      document.head.appendChild(script);
+      function loadAnimaleseScript() {
+        // Load animalese.js
+        if (!window.Animalese) {
+          const script = document.createElement('script');
+          script.src = 'https://acedio.github.io/animalese.js/animalese.js';
+          script.onload = () => {
+            // Initialize Animalese with the audio file
+            if (window.Animalese) {
+              const audioFileUrl = 'https://acedio.github.io/animalese.js/animalese.wav';
+              animaleseInstance = new window.Animalese(audioFileUrl, () => {
+                // Animalese is ready to use
+                resolve(animaleseInstance);
+              });
+            } else {
+              reject(new Error('Animalese constructor not found'));
+            }
+          };
+          script.onerror = () => reject(new Error('Failed to load animalese.js'));
+          document.head.appendChild(script);
+        } else {
+          // Already loaded, just initialize
+          const audioFileUrl = 'https://acedio.github.io/animalese.js/animalese.wav';
+          animaleseInstance = new window.Animalese(audioFileUrl, () => {
+            resolve(animaleseInstance);
+          });
+        }
+      }
     });
   }
 
@@ -233,26 +248,27 @@ export function mountChat(containerSelector, options = {}){
       // Load animalese if needed
       const animalese = await loadAnimalese();
       
-      // Generate and play animalese audio for the text
-      // animalese.js returns an Audio object
-      if (typeof animalese === 'function') {
+      // Generate and play animalese audio
+      // animalese.Animalese(text, shorten, pitch) returns a WAV data URI
+      if (animalese && animalese.Animalese) {
         try {
-          // Try with options first (pitch adjustment)
-          currentAnimaleseAudio = animalese(text, { pitch: 20 });
-          // If that doesn't work, try without options
-          if (!currentAnimaleseAudio) {
-            currentAnimaleseAudio = animalese(text);
-          }
+          // Generate WAV: Animalese(text, shorten=false, pitch=1.0)
+          const pitch = 1.0; // Default pitch
+          const wavDataUri = animalese.Animalese(text, false, pitch);
           
-          if (currentAnimaleseAudio && currentAnimaleseAudio.play) {
-            // Ensure audio can play
-            const playPromise = currentAnimaleseAudio.play();
-            if (playPromise !== undefined) {
-              playPromise.catch(err => {
-                // Auto-play was prevented, user interaction required
-                console.debug('Animalese audio requires user interaction:', err);
-              });
-            }
+          // Create Audio object from the WAV data
+          const audio = new Audio();
+          audio.src = wavDataUri;
+          
+          currentAnimaleseAudio = audio;
+          
+          // Play the audio
+          const playPromise = currentAnimaleseAudio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              // Auto-play was prevented, user interaction required
+              console.debug('Animalese audio requires user interaction:', err);
+            });
           }
         } catch (err) {
           console.warn('Error generating animalese audio:', err);
