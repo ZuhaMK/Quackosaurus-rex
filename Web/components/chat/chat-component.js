@@ -24,7 +24,7 @@ export function mountChat(containerSelector, options = {}){
       <div class="dropdown-content">
         <div class="dropdown-item" data-action="go-back">Go Back to Options</div>
         <div class="dropdown-item" data-action="history">Chat History</div>
-        <div class="dropdown-item" data-action="mute">Mute Music</div>
+        <div class="dropdown-item" data-action="mute">🔊 Mute Music</div>
       </div>
     </div>
 
@@ -119,6 +119,11 @@ export function mountChat(containerSelector, options = {}){
   }
   
   function playButtonHoverSound() {
+    // Check if muted
+    if (window.animaleseMuted) {
+      return;
+    }
+    
     try {
       // Only play if audio context exists and is running (user has interacted)
       if (!audioContext || audioContext.state === 'suspended') {
@@ -148,6 +153,11 @@ export function mountChat(containerSelector, options = {}){
   }
   
   function playButtonClickSound() {
+    // Check if muted
+    if (window.animaleseMuted) {
+      return;
+    }
+    
     try {
       const ctx = initAudioContext();
       if (!ctx) return;
@@ -738,9 +748,16 @@ export function mountChat(containerSelector, options = {}){
       const action = item.getAttribute('data-action');
       dropdownContent.classList.remove('show');
       
+      // Don't play sound if we're muting (would be ironic!)
+      if (action !== 'mute') {
+        playButtonClickSound();
+      }
+      
       if(action === 'go-back'){
-        // Go back to options page (bank reception)
-        if(options.goBackUrl){
+        // Go back to options page - check if there's a custom goBack callback
+        if(options.goBackCallback && typeof options.goBackCallback === 'function'){
+          options.goBackCallback();
+        } else if(options.goBackUrl){
           window.location.href = options.goBackUrl;
         } else {
           window.location.href = 'bankReception.html';
@@ -748,13 +765,24 @@ export function mountChat(containerSelector, options = {}){
       } else if(action === 'history'){
         openHistory();
       } else if(action === 'mute'){
-        // Toggle mute for animalese audio
+        // Toggle mute for ALL audio (animalese, button sounds, BGM)
+        window.animaleseMuted = !window.animaleseMuted;
+        
+        // Stop all currently playing animalese audio
+        if(currentAnimaleseAudio && !currentAnimaleseAudio.paused){
+          currentAnimaleseAudio.pause();
+          currentAnimaleseAudio.currentTime = 0;
+        }
+        
+        // Update button text and add visual indicator
         if(window.animaleseMuted){
-          window.animaleseMuted = false;
-          item.textContent = 'Mute Music';
+          item.textContent = '🔇 Unmute Music';
+          item.style.opacity = '0.7';
+          item.style.fontWeight = '700';
         } else {
-          window.animaleseMuted = true;
-          item.textContent = 'Unmute Music';
+          item.textContent = '🔊 Mute Music';
+          item.style.opacity = '1';
+          item.style.fontWeight = '600';
         }
       }
     });
