@@ -335,6 +335,85 @@
   </div>
 
   <script>
+    // Animalese audio for character speech
+    let currentAnimaleseAudio = null;
+    
+    async function loadAnimalese() {
+      // Check if animalese is already loaded
+      if (window.animalese) {
+        return window.animalese;
+      }
+      
+      // Load animalese.js if not already loaded
+      return new Promise((resolve, reject) => {
+        if (window.animalese) {
+          resolve(window.animalese);
+          return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = 'https://acedio.github.io/animalese.js/animalese.js';
+        script.onload = () => {
+          if (window.animalese) {
+            resolve(window.animalese);
+          } else {
+            reject(new Error('Animalese failed to load'));
+          }
+        };
+        script.onerror = () => reject(new Error('Failed to load animalese.js'));
+        document.head.appendChild(script);
+      });
+    }
+    
+    async function playAnimalese(text = '') {
+      // Check if muted
+      if (window.animaleseMuted || !text) {
+        return;
+      }
+      
+      try {
+        // Stop any currently playing audio
+        if (currentAnimaleseAudio) {
+          if (!currentAnimaleseAudio.paused) {
+            currentAnimaleseAudio.pause();
+          }
+          currentAnimaleseAudio.currentTime = 0;
+        }
+        
+        // Load animalese if needed
+        const animalese = await loadAnimalese();
+        
+        // Generate and play animalese audio for the text
+        if (typeof animalese === 'function') {
+          try {
+            // Try with pitch option first
+            currentAnimaleseAudio = animalese(text, { pitch: 20 });
+            
+            // If that didn't work, try without options
+            if (!currentAnimaleseAudio) {
+              currentAnimaleseAudio = animalese(text);
+            }
+            
+            // Play the audio if we have it
+            if (currentAnimaleseAudio && currentAnimaleseAudio.play) {
+              const playPromise = currentAnimaleseAudio.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(err => {
+                  // Audio requires user interaction - this is fine
+                  console.debug('Animalese audio requires user interaction:', err);
+                });
+              }
+            }
+          } catch (err) {
+            console.warn('Error generating animalese audio:', err);
+          }
+        }
+      } catch (error) {
+        // Graceful degradation - if animalese fails, chat still works
+        console.debug('Animalese audio error (continuing without audio):', error);
+      }
+    }
+    
     // Button sound effects
     let audioContext = null;
     
@@ -504,6 +583,9 @@
           aiMessageDiv.appendChild(bubble);
           chatMessages.appendChild(aiMessageDiv);
           chatMessages.scrollTop = chatMessages.scrollHeight;
+          
+          // Start playing animalese audio for the full text
+          playAnimalese(reply);
           
           // Type out the response
           for (let i = 0; i < reply.length; i++) {
