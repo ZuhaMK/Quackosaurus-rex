@@ -43,7 +43,7 @@ CONTENT GUIDELINES:
 - Be encouraging, supportive, and never judgmental
 - Use simple language that's easy to understand
 - When appropriate, use analogies (like comparing money to video game points or treats)
-- Structure information clearly with headings and lists when helpful
+- Structure information clearly with bullet points and line breaks when helpful
 """
 
 # ---- Chat history (simple global for one player/session) ----
