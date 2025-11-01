@@ -626,12 +626,16 @@ export function mountChat(containerSelector, options = {}){
   function goBack(){ if(isTyping) return; if(history.length<=1) return; history.pop(); const last = history[history.length-1]; if(!last) return; const found = DIALOG.findIndex(d=>d.text===last.text && d.speaker===last.speaker); if(found>=0){ index = found; if(speakerLabel) speakerLabel.textContent = last.speaker==='robot' ? 'QuackBot' : 'You'; if(lineText) lineText.textContent = last.text; showAvatar(last.speaker); setTimeout(()=>hideAvatar(last.speaker),700); } else { if(speakerLabel) speakerLabel.textContent = last.speaker==='robot' ? 'QuackBot' : 'You'; if(lineText) lineText.textContent = last.text; } }
 
   // wire controls
-  if(btnNext) btnNext.addEventListener('click', ()=>{
-    if(waitingForClick && index < DIALOG.length-1){
-      waitingForClick = false;
-      renderStep(index+1);
-    }
-  });
+  if(btnNext) {
+    btnNext.addEventListener('mouseenter', () => playButtonHoverSound());
+    btnNext.addEventListener('click', ()=>{
+      playButtonClickSound();
+      if(waitingForClick && index < DIALOG.length-1){
+        waitingForClick = false;
+        renderStep(index+1);
+      }
+    });
+  }
   
   // Dropdown menu functionality
   if(dropdownToggle){

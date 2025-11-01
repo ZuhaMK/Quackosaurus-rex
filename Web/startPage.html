@@ -71,7 +71,8 @@
             filter: brightness(1.1);
         }
         .enter-button:active {
-            transform: translateY(-2px) scale(1.02);
+            transform: translateY(-2px) scale(0.98);
+            filter: brightness(0.95);
         }
         @media (max-width: 768px) {
             .title {
@@ -88,9 +89,90 @@
 <body>
     <div class="landing-container">
         <h1 class="title">Quackosaurus-rex:<br>Your Financial Adventure Awaits!</h1>
-        <button class="enter-button" onclick="window.location.href='bankReception.html'">
+        <button class="enter-button" id="enterButton">
             Enter the Bank
         </button>
     </div>
+
+    <script>
+        // Button sound effects using Web Audio API
+        let audioContext = null;
+        
+        function initAudioContext() {
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.debug('Audio context initialization failed:', e);
+                    return null;
+                }
+            }
+            // Resume audio context if suspended (required for user interaction)
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            return audioContext;
+        }
+        
+        function playButtonHoverSound() {
+            try {
+                const ctx = initAudioContext();
+                if (!ctx) return;
+                
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                // Higher pitch, short sound for hover
+                oscillator.frequency.value = 600;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                
+                oscillator.start(ctx.currentTime);
+                oscillator.stop(ctx.currentTime + 0.1);
+            } catch (e) {
+                console.debug('Button hover sound unavailable:', e);
+            }
+        }
+        
+        function playButtonClickSound() {
+            try {
+                const ctx = initAudioContext();
+                if (!ctx) return;
+                
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                // Lower pitch, slightly longer sound for click
+                oscillator.frequency.value = 400;
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                
+                oscillator.start(ctx.currentTime);
+                oscillator.stop(ctx.currentTime + 0.15);
+            } catch (e) {
+                console.debug('Button click sound unavailable:', e);
+            }
+        }
+
+        // Add hover and click sound effects to enter button
+        const enterButton = document.getElementById('enterButton');
+        if (enterButton) {
+            enterButton.addEventListener('mouseenter', playButtonHoverSound);
+            enterButton.addEventListener('click', (e) => {
+                playButtonClickSound();
+                setTimeout(() => window.location.href = 'bankReception.html', 150);
+            });
+        }
+    </script>
 </body>
 </html>
