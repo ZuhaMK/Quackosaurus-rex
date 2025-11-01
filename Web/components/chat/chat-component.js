@@ -391,7 +391,7 @@ export function mountChat(containerSelector, options = {}){
     const tempMeasure = document.createElement('div');
     tempMeasure.style.position = 'absolute';
     tempMeasure.style.visibility = 'hidden';
-    tempMeasure.style.fontFamily = '"Pixelify Sans", sans-serif';
+    tempMeasure.style.fontFamily = '"Doto", sans-serif';
     tempMeasure.style.fontSize = '36px'; // Same as line-text
     tempMeasure.style.fontWeight = '400';
     tempMeasure.style.lineHeight = '1.4';
@@ -547,7 +547,7 @@ export function mountChat(containerSelector, options = {}){
     const tempContainer = document.createElement('div');
     tempContainer.style.position = 'absolute';
     tempContainer.style.visibility = 'hidden';
-    tempContainer.style.fontFamily = '"Pixelify Sans", sans-serif';
+    tempContainer.style.fontFamily = '"Doto", sans-serif';
     tempContainer.style.fontSize = '32px';
     tempContainer.style.fontWeight = '600';
     document.body.appendChild(tempContainer);
@@ -560,7 +560,7 @@ export function mountChat(containerSelector, options = {}){
       tempTextUnconstrained.textContent = c.text;
       tempTextUnconstrained.style.display = 'inline-block';
       tempTextUnconstrained.style.whiteSpace = 'nowrap';
-      tempTextUnconstrained.style.fontFamily = '"Pixelify Sans", sans-serif';
+      tempTextUnconstrained.style.fontFamily = '"Doto", sans-serif';
       tempTextUnconstrained.style.fontSize = '32px';
       tempTextUnconstrained.style.fontWeight = '600';
       tempContainer.appendChild(tempTextUnconstrained);
@@ -576,7 +576,7 @@ export function mountChat(containerSelector, options = {}){
       tempText.style.width = 'auto';
       tempText.style.wordWrap = 'break-word';
       tempText.style.whiteSpace = 'normal';
-      tempText.style.fontFamily = '"Pixelify Sans", sans-serif';
+      tempText.style.fontFamily = '"Doto", sans-serif';
       tempText.style.fontSize = '32px';
       tempText.style.fontWeight = '600';
       tempText.style.lineHeight = '1.4';
@@ -777,9 +777,17 @@ export function mountChat(containerSelector, options = {}){
         if(options.goBackCallback && typeof options.goBackCallback === 'function'){
           options.goBackCallback();
         } else if(options.goBackUrl){
-          window.location.href = options.goBackUrl;
+          if (window.navigateWithTransition) {
+            window.navigateWithTransition(options.goBackUrl);
+          } else {
+            window.location.href = options.goBackUrl;
+          }
         } else {
-          window.location.href = 'bankReception.html';
+          if (window.navigateWithTransition) {
+            window.navigateWithTransition('bankReception.html');
+          } else {
+            window.location.href = 'bankReception.html';
+          }
         }
       } else if(action === 'history'){
         openHistory();

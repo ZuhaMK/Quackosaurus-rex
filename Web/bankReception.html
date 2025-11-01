@@ -6,7 +6,7 @@
   <title>Bank Reception - Quackosaurus-rex</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Doto:wght@900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="components/chat/chat-component.css" />
   <style>
     .service-options {
@@ -38,8 +38,8 @@
       padding-bottom: 5rem;
       padding-left: 5rem;
       padding-right: 5rem;
-      font-size: 1.3rem;
-      font-weight: 700;
+      font-size: 2rem;
+      font-weight: 900;
       border: none;
       border-radius: 15px;
       cursor: pointer;
@@ -53,7 +53,8 @@
       background-position: center;
       min-width: 700px;
       min-height: 240px;
-      font-family: 'Pixelify Sans', sans-serif;
+      font-family: 'Doto', sans-serif;
+      font-weight: 900;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -98,19 +99,21 @@
   <div class="service-options" id="serviceOptions">
     <button class="service-btn savings" id="savingsBtn">
       Savings & Budgeting Room<br>
-      <small style="font-size: 0.9rem; opacity: 0.9;">Learn to save like a pro and budget like a boss!</small>
+      <small style="font-size: 1.3rem; opacity: 0.9;">Learn to save like a pro and budget like a boss!</small>
     </button>
     <button class="service-btn credit" id="creditBtn">
       Credit & Debt Room<br>
-      <small style="font-size: 0.9rem; opacity: 0.9;">Master credit scores and crush that debt!</small>
+      <small style="font-size: 1.3rem; opacity: 0.9;">Master credit scores and crush that debt!</small>
     </button>
     <button class="service-btn consultant" id="consultantBtn">
       Dr. Ka-ching<br>
-      <small style="font-size: 0.9rem; opacity: 0.9;">Get personalized advice from our AI financial expert!</small>
+      <small style="font-size: 1.3rem; opacity: 0.9;">Get personalized advice from our AI financial expert!</small>
     </button>
   </div>
 
   <script type="module">
+    // Import Page Transitions
+    import './components/transitions/page-transitions.js';
     // Import BGM Manager
     import './components/bgm/bgm-manager.js';
     import { mountChat } from './components/chat/chat-component.js';
@@ -364,19 +367,37 @@
     document.getElementById('savingsBtn').addEventListener('mouseenter', playButtonHoverSound);
     document.getElementById('savingsBtn').addEventListener('click', (e) => {
       playButtonClickSound();
-      setTimeout(() => window.location.href = 'savings&budget.html', 150);
+      setTimeout(() => {
+        if (window.navigateWithTransition) {
+          window.navigateWithTransition('savings&budget.html');
+        } else {
+          window.location.href = 'savings&budget.html';
+        }
+      }, 150);
     });
     
     document.getElementById('creditBtn').addEventListener('mouseenter', playButtonHoverSound);
     document.getElementById('creditBtn').addEventListener('click', (e) => {
       playButtonClickSound();
-      setTimeout(() => window.location.href = 'credit&debt.html', 150);
+      setTimeout(() => {
+        if (window.navigateWithTransition) {
+          window.navigateWithTransition('credit&debt.html');
+        } else {
+          window.location.href = 'credit&debt.html';
+        }
+      }, 150);
     });
     
     document.getElementById('consultantBtn').addEventListener('mouseenter', playButtonHoverSound);
     document.getElementById('consultantBtn').addEventListener('click', (e) => {
       playButtonClickSound();
-      setTimeout(() => window.location.href = 'chat.html', 150);
+      setTimeout(() => {
+        if (window.navigateWithTransition) {
+          window.navigateWithTransition('chat.html');
+        } else {
+          window.location.href = 'chat.html';
+        }
+      }, 150);
     });
   </script>
 </body>
