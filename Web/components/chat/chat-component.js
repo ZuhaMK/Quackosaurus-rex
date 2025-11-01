@@ -777,9 +777,17 @@ export function mountChat(containerSelector, options = {}){
         if(options.goBackCallback && typeof options.goBackCallback === 'function'){
           options.goBackCallback();
         } else if(options.goBackUrl){
-          window.location.href = options.goBackUrl;
+          if (window.navigateWithTransition) {
+            window.navigateWithTransition(options.goBackUrl);
+          } else {
+            window.location.href = options.goBackUrl;
+          }
         } else {
-          window.location.href = 'bankReception.html';
+          if (window.navigateWithTransition) {
+            window.navigateWithTransition('bankReception.html');
+          } else {
+            window.location.href = 'bankReception.html';
+          }
         }
       } else if(action === 'history'){
         openHistory();

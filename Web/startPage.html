@@ -95,6 +95,8 @@
     </div>
 
     <script type="module">
+        // Import Page Transitions
+        import './components/transitions/page-transitions.js';
         // Import BGM Manager
         import './components/bgm/bgm-manager.js';
         
@@ -192,7 +194,13 @@
             enterButton.addEventListener('mouseenter', playButtonHoverSound);
             enterButton.addEventListener('click', (e) => {
                 playButtonClickSound();
-                setTimeout(() => window.location.href = 'bankReception.html', 150);
+                setTimeout(() => {
+                    if (window.navigateWithTransition) {
+                        window.navigateWithTransition('bankReception.html');
+                    } else {
+                        window.location.href = 'bankReception.html';
+                    }
+                }, 150);
             });
         }
     </script>
