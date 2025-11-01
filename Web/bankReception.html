@@ -207,6 +207,28 @@
     let servicesShown = false;
     
     // Hook into the chat component to know when step 4 finishes
+    let audioFinished = false;
+    
+    // Listen for animalese audio ending
+    window.addEventListener('animaleseAudioEnded', (e) => {
+      // Check if this is the final step (step 4)
+      const lineText = container.querySelector('.line-text');
+      if (lineText) {
+        const text = lineText.textContent || '';
+        if (text.includes("three amazing services") && 
+            text.includes("Choose one that interests you most")) {
+          audioFinished = true;
+          // Show options after audio finishes
+          setTimeout(() => {
+            if (!servicesShown) {
+              showServiceOptions();
+              servicesShown = true;
+            }
+          }, 300); // Small delay after audio ends
+        }
+      }
+    });
+    
     const checkAndShowServices = () => {
       if (servicesShown) return false;
       
@@ -223,8 +245,8 @@
         // Step 4 text is: "Alright, let's get you sorted! We have three amazing services that will turn your financial life around. Choose one that interests you most:"
         const expectedText = "Alright, let's get you sorted! We have three amazing services that will turn your financial life around. Choose one that interests you most:";
         
-        // If text matches or is close to complete, and we haven't shown yet
-        if (text.trim().length >= expectedText.length * 0.9) {
+        // Only show options if text is complete AND audio has finished
+        if (text.trim().length >= expectedText.length * 0.9 && audioFinished) {
           // Wait a moment for user to see the message, then show options
           if (!servicesShown) {
             setTimeout(() => {
@@ -232,7 +254,7 @@
                 showServiceOptions();
                 servicesShown = true;
               }
-            }, 1500);
+            }, 300);
             return true;
           }
         }

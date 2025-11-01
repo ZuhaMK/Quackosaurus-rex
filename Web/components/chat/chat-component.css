@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Jersey+10&display=swap');
 /* Pixel-art speech bubble tail for chat box */
 .quack-chat .chat-box::after{content:'';position:absolute;bottom:-18px;left:50px;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:18px solid #333;image-rendering:pixelated}
-.quack-chat .chat-box::before{content:'';position:absolute;bottom:-15px;left:53px;width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-top:15px solid rgba(255,255,255,0.6);image-rendering:pixelated}
+.quack-chat .chat-box::before{content:'';position:absolute;bottom:-15px;left:53px;width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-top:15px solid rgba(255,255,255,0.85);image-rendering:pixelated}
 /* Cat mouth icon in top-right corner */
 .quack-chat .chat-box-icon{position:absolute;top:18px;right:24px;width:20px;height:14px;background:#333;clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);opacity:0.85;pointer-events:none;image-rendering:pixelated}
 .quack-chat{position:relative;height:100vh;font-family:'Jersey 10',sans-serif}
@@ -11,7 +11,11 @@
 /* Stage positioning: inset values control spacing (top, right, bottom, left) */
 /* Bottom value (320px) controls how high characters sit - lower value = closer to floor */
 .quack-chat .avatar{width:500px;height:750px;background:none;color:transparent;display:flex;align-items:flex-end;justify-content:center;font-weight:700;border-radius:0;opacity:0;transform:translateY(30px);transition:opacity .45s ease, transform .45s ease;overflow:visible;position:absolute;bottom:-300px}
+/* Separate positioning control for robot (left avatar - Momo/Dino) */
+/* Horizontal position - adjust left value to move robot left/right */
 .quack-chat .avatar.left{left:40px}
+/* Vertical position - adjust bottom value to move robot up/down (separate from duck) */
+.quack-chat .avatar.left{bottom:-350px}
 /* Separate positioning control for duck (right avatar) */
 /* Horizontal position - adjust right value to move duck left/right */
 .quack-chat .avatar.right{right:40px}
@@ -28,12 +32,12 @@
  *   padding-right: 35px
  *   gap: 25px (space between text area and next button)
  */
-.quack-chat .chat-box{position:fixed;left:50%;transform:translateX(-50%);bottom:-100px;background:rgba(255,255,255,0.6);background-image:repeating-linear-gradient(0deg,transparent,transparent 19px,rgba(200,200,200,0.2) 19px,rgba(200,200,200,0.2) 20px),repeating-linear-gradient(90deg,transparent,transparent 19px,rgba(200,200,200,0.2) 19px,rgba(200,200,200,0.2) 20px);padding-top:12px;padding-bottom:12px;padding-left:50px;padding-right:35px;border:3px solid #333;border-radius:2px;display:flex;flex-direction:row;align-items:center;gap:25px;min-height:200px;width:800px;max-width:calc(100vw - 60px);box-shadow:0 0 0 1px #333 inset,0 2px 4px rgba(0,0,0,0.1);position:relative;height:auto;transition:background-image 0.3s ease}
+.quack-chat .chat-box{position:fixed;left:50%;transform:translateX(-50%);bottom:-100px;background:rgba(255,255,255,0.85);background-image:repeating-linear-gradient(0deg,transparent,transparent 19px,rgba(200,200,200,0.2) 19px,rgba(200,200,200,0.2) 20px),repeating-linear-gradient(90deg,transparent,transparent 19px,rgba(200,200,200,0.2) 19px,rgba(200,200,200,0.2) 20px);padding-top:12px;padding-bottom:12px;padding-left:50px;padding-right:35px;border:3px solid #333;border-radius:2px;display:flex;flex-direction:row;align-items:center;gap:25px;min-height:200px;width:800px;max-width:calc(100vw - 60px);box-shadow:0 0 0 1px #333 inset,0 2px 4px rgba(0,0,0,0.1);position:relative;height:auto;transition:background-image 0.3s ease}
 /* When duck is speaking: flip ONLY the background gradient, NOT the text */
 .quack-chat .chat-box.duck-speaking{background-image:repeating-linear-gradient(0deg,transparent,transparent 19px,rgba(200,200,200,0.2) 19px,rgba(200,200,200,0.2) 20px),repeating-linear-gradient(-90deg,transparent,transparent 19px,rgba(200,200,200,0.2) 19px,rgba(200,200,200,0.2) 20px)}
 /* Move speech bubble tail to right side when duck is speaking (no flip on text) */
 .quack-chat .chat-box.duck-speaking::after{left:auto;right:50px}
-.quack-chat .chat-box.duck-speaking::before{left:auto;right:53px}
+.quack-chat .chat-box.duck-speaking::before{left:auto;right:53px;border-top-color:rgba(255,255,255,0.85)}
 /* Move cat icon to left side when duck is speaking (since background appears flipped) */
 .quack-chat .chat-box.duck-speaking .chat-box-icon{right:auto;left:24px}
 .quack-chat .chat-controls{display:none}
