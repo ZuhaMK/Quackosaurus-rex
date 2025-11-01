@@ -337,50 +337,65 @@
   <script>
     // Animalese audio for character speech
     let currentAnimaleseAudio = null;
+    let animaleseInstance = null;
     
     async function loadAnimalese() {
-      // Check if animalese is already loaded
-      if (window.animalese) {
-        console.log('Animalese already loaded:', typeof window.animalese);
-        return window.animalese;
+      // Check if already initialized
+      if (animaleseInstance) {
+        return animaleseInstance;
       }
       
-      // Load animalese.js if not already loaded
+      // Load required dependencies
       return new Promise((resolve, reject) => {
-        console.log('Loading animalese.js...');
-        
-        const script = document.createElement('script');
-        script.src = 'https://acedio.github.io/animalese.js/animalese.js';
-        script.onload = () => {
-          console.log('Script loaded, checking window.animalese...');
-          // Wait for the script to initialize window.animalese (may need multiple attempts)
-          const checkAnimalese = (attempts = 10) => {
-            if (window.animalese) {
-              console.log('Animalese loaded successfully:', typeof window.animalese);
-              resolve(window.animalese);
-            } else if (window.Animalese) {
-              console.log('Found Animalese (capital A)');
-              resolve(window.Animalese);
-            } else if (attempts > 0) {
-              // Wait a bit more and try again
-              setTimeout(() => {
-                console.log(`Checking again... (${10 - attempts + 1}/10)`);
-                checkAnimalese(attempts - 1);
-              }, 100);
-            } else {
-              // Final check - log what's available
-              console.error('Animalese not found after all attempts');
-              console.error('Available globals:', Object.keys(window).filter(k => k.toLowerCase().includes('animal')));
-              reject(new Error('Animalese failed to load - window.animalese not found after initialization'));
-            }
+        // Load riffwave.js first (required dependency)
+        if (!window.RIFFWAVE) {
+          console.log('Loading riffwave.js...');
+          const riffwaveScript = document.createElement('script');
+          riffwaveScript.src = 'https://acedio.github.io/animalese.js/riffwave.js';
+          riffwaveScript.onload = () => {
+            console.log('riffwave.js loaded');
+            loadAnimaleseScript();
           };
-          checkAnimalese();
-        };
-        script.onerror = (err) => {
-          console.error('Failed to load animalese.js script:', err);
-          reject(new Error('Failed to load animalese.js'));
-        };
-        document.head.appendChild(script);
+          riffwaveScript.onerror = () => reject(new Error('Failed to load riffwave.js'));
+          document.head.appendChild(riffwaveScript);
+        } else {
+          loadAnimaleseScript();
+        }
+        
+        function loadAnimaleseScript() {
+          // Load animalese.js
+          if (!window.Animalese) {
+            console.log('Loading animalese.js...');
+            const script = document.createElement('script');
+            script.src = 'https://acedio.github.io/animalese.js/animalese.js';
+            script.onload = () => {
+              // Initialize Animalese with the audio file
+              if (window.Animalese) {
+                console.log('Initializing Animalese with audio file...');
+                const audioFileUrl = 'https://acedio.github.io/animalese.js/animalese.wav';
+                animaleseInstance = new window.Animalese(audioFileUrl, () => {
+                  console.log('✅ Animalese initialized successfully!');
+                  resolve(animaleseInstance);
+                });
+              } else {
+                reject(new Error('Animalese constructor not found'));
+              }
+            };
+            script.onerror = (err) => {
+              console.error('Failed to load animalese.js script:', err);
+              reject(new Error('Failed to load animalese.js'));
+            };
+            document.head.appendChild(script);
+          } else {
+            // Already loaded, just initialize
+            console.log('Animalese already in window, initializing...');
+            const audioFileUrl = 'https://acedio.github.io/animalese.js/animalese.wav';
+            animaleseInstance = new window.Animalese(audioFileUrl, () => {
+              console.log('✅ Animalese initialized successfully!');
+              resolve(animaleseInstance);
+            });
+          }
+        }
       });
     }
     
@@ -410,67 +425,58 @@
         // Load animalese if needed
         console.log('Loading animalese...');
         const animalese = await loadAnimalese();
-        console.log('Animalese loaded, type:', typeof animalese);
+        console.log('Animalese loaded:', animalese);
         
-        // Generate and play animalese audio for the text
-        // animalese.js returns an Audio object (same as chat-component.js)
-        if (typeof animalese === 'function') {
+        // Generate and play animalese audio
+        // animalese.Animalese(text, shorten, pitch) returns a WAV data URI
+        if (animalese && animalese.Animalese) {
           try {
-            console.log('Calling animalese function with text:', text.substring(0, 50) + '...');
+            console.log('Generating animalese audio for text:', text.substring(0, 50) + '...');
             
-            // Try with options first (pitch adjustment) - same as chat-component.js
-            currentAnimaleseAudio = animalese(text, { pitch: 20 });
-            console.log('Called with options, got:', currentAnimaleseAudio);
+            // Generate WAV: Animalese(text, shorten=false, pitch=1.0)
+            const pitch = 1.0; // Default pitch
+            const wavObject = animalese.Animalese(text, false, pitch);
+            console.log('WAV object generated:', wavObject);
             
-            // If that doesn't work, try without options (same fallback as chat-component.js)
-            if (!currentAnimaleseAudio) {
-              currentAnimaleseAudio = animalese(text);
-              console.log('Called without options, got:', currentAnimaleseAudio);
+            // The method returns a RIFFWAVE object, we need the dataURI property
+            let wavDataUri;
+            if (typeof wavObject === 'string') {
+              // If it's already a string, use it directly
+              wavDataUri = wavObject;
+            } else if (wavObject && wavObject.dataURI) {
+              // If it's a RIFFWAVE object, extract the dataURI
+              wavDataUri = wavObject.dataURI;
+              console.log('Extracted dataURI from RIFFWAVE object');
+            } else {
+              console.error('❌ Animalese returned unexpected format:', wavObject);
+              return;
             }
             
-            // Ensure we have an audio object
-            if (currentAnimaleseAudio) {
-              console.log('Audio object created:', currentAnimaleseAudio);
-              console.log('Audio type:', currentAnimaleseAudio.constructor.name);
-              
-              // Set volume
-              if (currentAnimaleseAudio.volume !== undefined) {
-                currentAnimaleseAudio.volume = 0.7;
-                console.log('Volume set to 0.7');
+            // Create Audio object from the WAV data URI
+            const audio = new Audio();
+            audio.src = wavDataUri;
+            audio.volume = 0.7;
+            
+            currentAnimaleseAudio = audio;
+            
+            // Try to play - handle autoplay restrictions
+            try {
+              console.log('Attempting to play audio...');
+              const playPromise = currentAnimaleseAudio.play();
+              if (playPromise !== undefined) {
+                await playPromise;
+                console.log('✅ Animalese playing successfully!');
               }
-              
-              // Try to play - handle autoplay restrictions
-              try {
-                console.log('Attempting to play audio...');
-                const playPromise = currentAnimaleseAudio.play();
-                if (playPromise !== undefined) {
-                  await playPromise;
-                  console.log('✅ Animalese playing successfully!');
-                } else {
-                  console.log('Play promise was undefined, audio may have started');
-                }
-              } catch (playError) {
-                console.error('❌ Play error:', playError);
-                console.error('Error details:', {
-                  name: playError.name,
-                  message: playError.message,
-                  code: playError.code
-                });
-              }
-            } else {
-              console.error('❌ Animalese function did not return audio object');
-              console.log('Returned value:', audio);
+            } catch (playError) {
+              console.warn('⚠️ Autoplay blocked - user interaction required:', playError);
             }
           } catch (err) {
             console.error('❌ Error generating animalese audio:', err);
             console.error('Error stack:', err.stack);
           }
         } else {
-          console.error('❌ Animalese is not a function. Type:', typeof animalese);
-          console.log('Value:', animalese);
-          // Log what's actually in window
-          console.log('window.animalese:', window.animalese);
-          console.log('window.Animalese:', window.Animalese);
+          console.error('❌ Animalese instance or Animalese method not found');
+          console.log('Animalese instance:', animalese);
         }
       } catch (error) {
         console.error('❌ Animalese audio error:', error);
