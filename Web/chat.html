@@ -520,8 +520,9 @@
           try {
             console.log('Generating animalese audio for text:', text.substring(0, 50) + '...');
             
-            // Generate WAV: Animalese(text, shorten=false, pitch=1.0)
-            const pitch = 1.0; // Default pitch
+            // Generate WAV: Animalese(text, shorten=false, pitch)
+            // Lower pitch for male character (0.75 = lower/male voice, 1.0 = default, 1.5 = higher/female)
+            const pitch = 0.75; // Lower pitch for male character (less Isabella-like)
             const wavObject = animalese.Animalese(text, false, pitch);
             console.log('WAV object generated:', wavObject);
             
@@ -543,9 +544,11 @@
             const audio = new Audio();
             audio.src = wavDataUri;
             audio.volume = 0.7;
+            // Make speaking speed way faster for chat page
+            audio.playbackRate = 2.5; // 2.5x faster (much faster than 1.3 in other pages)
             
-                currentAnimaleseAudio = audio;
-                window.currentAnimaleseAudio = audio; // Global reference
+            currentAnimaleseAudio = audio;
+            window.currentAnimaleseAudio = audio; // Global reference
             
             // Try to play - handle autoplay restrictions
             try {
