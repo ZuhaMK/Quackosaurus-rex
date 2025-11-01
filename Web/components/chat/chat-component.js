@@ -294,6 +294,13 @@ export function mountChat(containerSelector, options = {}){
           // Speed up audio playback (faster animalese)
           audio.playbackRate = 1.3; // 30% faster
           
+          // Hide avatar when audio ends (stop GIF animation)
+          audio.addEventListener('ended', () => {
+            if (speaker) {
+              hideAvatar(speaker);
+            }
+          });
+          
           currentAnimaleseAudio = audio;
           
           // Play the audio
@@ -481,7 +488,10 @@ export function mountChat(containerSelector, options = {}){
     if(speakerLabel) speakerLabel.textContent = step.speaker === 'robot' ? robotName : duckName;
     // prepare current text (used for click-to-complete)
     currentStepText = step.text || '';
-    showAvatar(step.speaker); hideAvatar(step.speaker==='robot'?'duck':'robot');
+    // Show the speaking avatar and hide the other one
+    const otherSpeaker = step.speaker === 'robot' ? 'duck' : 'robot';
+    hideAvatar(otherSpeaker);
+    showAvatar(step.speaker); // Ensure speaker is shown and animated
     
     // Toggle textbox flip when duck is speaking
     if(chatBoxEl) {
@@ -726,7 +736,9 @@ export function mountChat(containerSelector, options = {}){
   }
 
   async function renderInlineDuckLine(text){ 
-    showAvatar('duck'); 
+    // Hide robot and show duck
+    hideAvatar('robot');
+    showAvatar('duck'); // Ensure duck is shown and animated
     // Toggle textbox flip when duck is speaking
     if(chatBoxEl) {
       chatBoxEl.classList.add('duck-speaking');
@@ -739,10 +751,14 @@ export function mountChat(containerSelector, options = {}){
     
     // Keep duck visible - will hide when user clicks to proceed
     // Don't hide avatar immediately, wait for user click
+    // (Avatar will also hide when audio ends via event listener)
   }
 
   async function renderStepFromInline(obj){ 
-    showAvatar(obj.speaker); 
+    // Hide the other speaker and show current speaker
+    const otherSpeaker = obj.speaker === 'robot' ? 'duck' : 'robot';
+    hideAvatar(otherSpeaker);
+    showAvatar(obj.speaker); // Ensure speaker is shown and animated
     // Toggle textbox flip when duck is speaking
     if(chatBoxEl) {
       if(obj.speaker === 'duck') {
@@ -757,6 +773,8 @@ export function mountChat(containerSelector, options = {}){
     currentSpeaker = obj.speaker; 
     await typeLine(obj.text, obj.speaker); 
     appendHistory({speaker:obj.speaker, text:obj.text}); 
+    // Avatar will hide when audio ends (via event listener)
+    // Keep setTimeout as fallback in case audio doesn't play
     setTimeout(()=>hideAvatar(obj.speaker),700); 
     setTimeout(()=>renderStep(obj.then),700); 
   }
