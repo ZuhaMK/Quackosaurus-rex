@@ -134,9 +134,11 @@
     
     /* Message bubble */
     .message {
-      display: flex;
+      display: block; /* Changed to block for vertical stacking */
       max-width: 70%;
+      width: 100%;
       animation: fadeIn 0.3s ease;
+      margin-bottom: 15px; /* Ensure spacing between messages */
     }
     
     @keyframes fadeIn {
@@ -146,11 +148,26 @@
     
     .message.user {
       align-self: flex-end;
-      flex-direction: row-reverse;
+      margin-left: auto; /* Push user messages to the right */
     }
     
     .message.ai {
       align-self: flex-start;
+      margin-right: auto; /* Push AI messages to the left */
+    }
+    
+    /* Ensure markdown content stacks vertically */
+    .message-bubble > * {
+      display: block;
+      width: 100%;
+    }
+    
+    .message-bubble p,
+    .message-bubble ul,
+    .message-bubble ol {
+      display: block;
+      width: 100%;
+      margin: 8px 0;
     }
     
     .message-bubble {
@@ -160,11 +177,12 @@
       color: #fff;
       word-wrap: break-word;
       min-height: 50px;
-      display: flex;
-      align-items: center;
+      display: block; /* Changed from flex to block for vertical stacking */
       border-radius: 20px;
       position: relative;
       animation: bubbleIn 0.4s ease-out;
+      width: 100%; /* Ensure full width */
+      box-sizing: border-box; /* Include padding in width */
     }
     
     /* Markdown styling within message bubbles */
