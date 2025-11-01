@@ -802,6 +802,13 @@ export function mountChat(containerSelector, options = {}){
       // First click: if typing, finish immediately and show full text
       if(isTyping){
         isTyping = false; // This will cause typeLine to display full text
+        
+        // Stop animalese audio immediately when skipping
+        if(currentAnimaleseAudio && !currentAnimaleseAudio.paused){
+          currentAnimaleseAudio.pause();
+          currentAnimaleseAudio.currentTime = 0;
+        }
+        
         if(lineText && currentStepText) {
           lineText.textContent = currentStepText;
         }
