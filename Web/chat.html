@@ -435,10 +435,24 @@
             
             // Generate WAV: Animalese(text, shorten=false, pitch=1.0)
             const pitch = 1.0; // Default pitch
-            const wavDataUri = animalese.Animalese(text, false, pitch);
-            console.log('WAV generated, creating Audio object...');
+            const wavObject = animalese.Animalese(text, false, pitch);
+            console.log('WAV object generated:', wavObject);
             
-            // Create Audio object from the WAV data
+            // The method returns a RIFFWAVE object, we need the dataURI property
+            let wavDataUri;
+            if (typeof wavObject === 'string') {
+              // If it's already a string, use it directly
+              wavDataUri = wavObject;
+            } else if (wavObject && wavObject.dataURI) {
+              // If it's a RIFFWAVE object, extract the dataURI
+              wavDataUri = wavObject.dataURI;
+              console.log('Extracted dataURI from RIFFWAVE object');
+            } else {
+              console.error('❌ Animalese returned unexpected format:', wavObject);
+              return;
+            }
+            
+            // Create Audio object from the WAV data URI
             const audio = new Audio();
             audio.src = wavDataUri;
             audio.volume = 0.7;
