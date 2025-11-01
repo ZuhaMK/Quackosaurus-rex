@@ -7,155 +7,436 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="components/chat/chat-component.css" />
   <style>
-    .chat-input-container {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
-      display: none;
-      gap: 10px;
-      z-index: 1000;
-      margin-bottom: 180px; /* Space above the chat-box */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .chat-input-container.active {
+    
+    body {
+      font-family: 'Pixelify Sans', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      background: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('./assets/backgrounds/LivingRoom.jpeg') center/cover no-repeat;
+    }
+    
+    .chat-container {
       display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: transparent;
     }
-    .chat-input-container input {
-      flex: 1;
-      padding: 12px 16px;
-      font-size: 16px;
+    
+    /* Header */
+    .chat-header {
+      padding: 20px;
+      background: rgba(0,0,0,0.7);
+      border-bottom: 3px solid #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    
+    .chat-header h1 {
+      color: #fff;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    
+    .menu-button {
+      background: transparent;
+      background-image: url('./assets/buttons/buttonMedium.PNG');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-position: center;
+      border: none;
+      color: #000;
+      padding: 12px 20px;
+      font-family: 'Pixelify Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+    
+    .menu-button:hover {
+      transform: scale(1.05);
+      filter: brightness(1.1);
+    }
+    
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 10px;
+      background: rgba(0,0,0,0.9);
       border: 2px solid #fff;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.95);
+      min-width: 220px;
+      overflow: hidden;
+      z-index: 1000;
+    }
+    
+    .dropdown-content.show {
+      display: block;
+    }
+    
+    .dropdown-item {
+      display: block;
+      padding: 15px 20px;
+      color: #fff;
+      text-decoration: none;
+      cursor: pointer;
+      font-family: 'Pixelify Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      transition: background 0.2s;
+    }
+    
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+    
+    .dropdown-item:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    /* Chat messages area */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      scroll-behavior: smooth;
+    }
+    
+    .chat-messages::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .chat-messages::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.2);
+    }
+    
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.3);
+      border-radius: 4px;
+    }
+    
+    /* Message bubble */
+    .message {
+      display: flex;
+      max-width: 70%;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    
+    .message.ai {
+      align-self: flex-start;
+    }
+    
+    .message-bubble {
+      padding: 15px 20px;
+      font-size: 20px;
+      line-height: 1.5;
+      color: #000;
+      word-wrap: break-word;
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-position: center;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .message.user .message-bubble {
+      background-image: url('./assets/bubbles/bubbleYellow.png');
+    }
+    
+    .message.ai .message-bubble {
+      background-image: url('./assets/bubbles/bubbleBlue.PNG');
+    }
+    
+    /* Input area */
+    .chat-input-area {
+      padding: 20px;
+      background: rgba(0,0,0,0.7);
+      border-top: 3px solid #fff;
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+    }
+    
+    .chat-input-area input {
+      flex: 1;
+      padding: 15px 20px;
+      font-size: 20px;
+      font-family: 'Pixelify Sans', sans-serif;
+      border: 3px solid #fff;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.95);
       color: #000;
     }
-    .chat-input-container input:focus {
+    
+    .chat-input-area input:focus {
       outline: none;
       background: #fff;
     }
-    .chat-input-container button {
-      padding: 12px 24px;
-      font-size: 16px;
+    
+    .chat-input-area input::placeholder {
+      color: #666;
+      font-family: 'Pixelify Sans', sans-serif;
+    }
+    
+    .send-button {
+      padding: 15px 30px;
+      font-size: 20px;
       font-weight: 700;
-      background: linear-gradient(135deg, #2196F3, #1976D2);
-      color: white;
+      font-family: 'Pixelify Sans', sans-serif;
+      background: transparent;
+      background-image: url('./assets/buttons/buttonMedium.PNG');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-position: center;
+      color: #000;
       border: none;
-      border-radius: 8px;
+      border-radius: 0;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: transform 0.2s ease, filter 0.2s ease;
+      min-width: 120px;
     }
-    .chat-input-container button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+    
+    .send-button:hover:not(:disabled) {
+      transform: scale(1.05);
+      filter: brightness(1.1);
     }
-    .chat-input-container button:disabled {
+    
+    .send-button:active:not(:disabled) {
+      transform: scale(0.98);
+      filter: brightness(0.95);
+    }
+    
+    .send-button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
-    .loading-indicator {
-      display: none;
-      color: #aaa;
-      font-style: italic;
+    
+    .loading {
+      display: inline-block;
+      margin-left: 10px;
     }
-    .loading-indicator.active {
-      display: block;
+    
+    .loading span {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #666;
+      margin: 0 2px;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    
+    .loading span:nth-child(1) { animation-delay: -0.32s; }
+    .loading span:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
     }
   </style>
 </head>
 <body>
-  <div id="dr-gpt-container" style="height:100vh"></div>
-  
-  <!-- Chat Input for ChatGPT API -->
-  <div class="chat-input-container" id="chatInputContainer">
-    <input type="text" id="userMessageInput" placeholder="Ask me anything about finances..." />
-    <button id="sendMessageBtn">Send</button>
+  <div class="chat-container">
+    <!-- Header with Menu -->
+    <div class="chat-header">
+      <h1>Dr. GPT Financial Consultant</h1>
+      <div style="position: relative;">
+        <button class="menu-button" id="menuButton">☰ Menu</button>
+        <div class="dropdown-content" id="dropdownContent">
+          <div class="dropdown-item" data-action="go-back">Go Back to Options</div>
+          <div class="dropdown-item" data-action="mute">Mute Music</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Chat Messages Area -->
+    <div class="chat-messages" id="chatMessages">
+      <!-- Initial greeting message -->
+      <div class="message ai">
+        <div class="message-bubble">
+          Hi! I'm Dr. GPT, your AI Financial Consultant! 🤖<br>
+          Ask me anything about finances!
+        </div>
+      </div>
+    </div>
+    
+    <!-- Input Area -->
+    <div class="chat-input-area">
+      <input type="text" id="userMessageInput" placeholder="Ask me anything about finances..." />
+      <button class="send-button" id="sendMessageBtn">Send</button>
+    </div>
   </div>
 
-  <script type="module">
-    import { mountChat } from './components/chat/chat-component.js';
-
-    // Simple greeting, then go straight to ChatGPT mode
-    const DRGPT_DIALOG = [
-      {
-        id: 0,
-        speaker: 'robot',
-        text: 'Greetings! I am Dr. GPT, your AI Financial Consultant! 🤖✨\n\nI\'m here to answer all your financial questions and give you personalized advice!\n\nThink of me as your 24/7 financial buddy who never sleeps (because I\'m a robot, haha)! 😄\n\nWhat would you like to know about finances today? Just type your question below! 🎯'
+  <script>
+    // Button sound effects
+    let audioContext = null;
+    
+    function initAudioContext() {
+      if (!audioContext) {
+        try {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+          return null;
+        }
       }
-    ];
-
-    const chat = mountChat('#dr-gpt-container', {
-      dialog: DRGPT_DIALOG,
-      assetsPath: './assets',
-      speakerNames: {
-        robot: 'Dr. GPT',
-        duck: 'You'
-      },
-      goBackUrl: 'bankReception.html'
-    });
-
-    // Update background and avatars
-    const container = document.querySelector('#dr-gpt-container');
-    if (container) {
-      const bg = container.querySelector('.background');
-      if (bg) {
-        bg.style.background = 'linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("./assets/backgrounds/LivingRoom.jpeg") center/cover no-repeat';
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
       }
-      // Use robot for Dr. GPT
-      const leftAvatar = container.querySelector('.avatar.left');
-      if (leftAvatar) {
-        leftAvatar.style.backgroundImage = 'url("./assets/characters/robot.GIF")';
-      }
-      const rightAvatar = container.querySelector('.avatar.right');
-      if (rightAvatar) {
-        rightAvatar.style.backgroundImage = 'url("./assets/characters/duckFlip.GIF")';
-      }
-      
-      // Back functionality now handled by dropdown menu
-
-      // Show chat input after greeting completes (3 seconds)
-      setTimeout(() => {
-        document.getElementById('chatInputContainer').classList.add('active');
-        document.getElementById('userMessageInput').focus();
-      }, 3000);
+      return audioContext;
     }
-
-    // ChatGPT API Integration
+    
+    function playButtonHoverSound() {
+      try {
+        const ctx = initAudioContext();
+        if (!ctx) return;
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        oscillator.frequency.value = 600;
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.1);
+      } catch (e) {}
+    }
+    
+    function playButtonClickSound() {
+      try {
+        const ctx = initAudioContext();
+        if (!ctx) return;
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        oscillator.frequency.value = 400;
+        oscillator.type = 'square';
+        gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.15);
+      } catch (e) {}
+    }
+    
+    // Menu functionality
+    const menuButton = document.getElementById('menuButton');
+    const dropdownContent = document.getElementById('dropdownContent');
+    
+    menuButton.addEventListener('mouseenter', playButtonHoverSound);
+    menuButton.addEventListener('click', (e) => {
+      playButtonClickSound();
+      e.stopPropagation();
+      dropdownContent.classList.toggle('show');
+    });
+    
+    document.addEventListener('click', (e) => {
+      if (!menuButton.contains(e.target) && !dropdownContent.contains(e.target)) {
+        dropdownContent.classList.remove('show');
+      }
+    });
+    
+    dropdownContent.querySelectorAll('.dropdown-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        const action = item.getAttribute('data-action');
+        dropdownContent.classList.remove('show');
+        playButtonClickSound();
+        
+        if (action === 'go-back') {
+          window.location.href = 'bankReception.html';
+        } else if (action === 'mute') {
+          window.animaleseMuted = !window.animaleseMuted;
+          item.textContent = window.animaleseMuted ? 'Unmute Music' : 'Mute Music';
+        }
+      });
+    });
+    
+    // Chat functionality
+    const chatMessages = document.getElementById('chatMessages');
     const chatInput = document.getElementById('userMessageInput');
     const sendBtn = document.getElementById('sendMessageBtn');
-    const chatContainer = document.querySelector('#dr-gpt-container');
-
+    
+    function addMessage(text, isUser = false) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+      
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble';
+      bubble.textContent = text;
+      
+      messageDiv.appendChild(bubble);
+      chatMessages.appendChild(messageDiv);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      
+      return messageDiv;
+    }
+    
+    function showLoading() {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message ai';
+      messageDiv.id = 'loadingMessage';
+      
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble';
+      bubble.innerHTML = 'Thinking<span class="loading"><span></span><span></span><span></span></span>';
+      
+      messageDiv.appendChild(bubble);
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function removeLoading() {
+      const loadingMsg = document.getElementById('loadingMessage');
+      if (loadingMsg) {
+        loadingMsg.remove();
+      }
+    }
+    
     async function sendChatMessage() {
       const message = chatInput.value.trim();
       if (!message) return;
-
-      // Disable input while processing
+      
+      // Add user message
+      addMessage(message, true);
+      chatInput.value = '';
+      
+      // Disable input
       chatInput.disabled = true;
       sendBtn.disabled = true;
       sendBtn.textContent = 'Sending...';
-
-      // Show user message in chat
-      const container = document.querySelector('#dr-gpt-container');
-      const lineText = container.querySelector('.line-text');
-      const speakerLabel = container.querySelector('.speaker-label');
-      const choicesEl = container.querySelector('.choices');
       
-      if (choicesEl) choicesEl.classList.add('hidden');
+      // Show loading
+      showLoading();
       
-      // Show user's question
-      if (speakerLabel) speakerLabel.textContent = 'You';
-      if (lineText) {
-        lineText.textContent = message;
-      }
-      chatInput.value = '';
-
-      // Show loading indicator
-      if (speakerLabel) speakerLabel.textContent = 'Dr. GPT';
-      if (lineText) {
-        lineText.textContent = 'Thinking...';
-      }
-
       try {
         const response = await fetch('http://127.0.0.1:5000/chat', {
           method: 'POST',
@@ -164,49 +445,64 @@
           },
           body: JSON.stringify({ message: message })
         });
-
+        
         const data = await response.json();
         
+        // Remove loading
+        removeLoading();
+        
         if (data.error) {
-          if (lineText) {
-            lineText.textContent = `Sorry, I encountered an error: ${data.error}`;
-          }
+          addMessage(`Sorry, I encountered an error: ${data.error}`);
         } else {
-          // Display response with typewriter effect
-          if (lineText) {
-            lineText.textContent = '';
-            const reply = data.reply;
-            for (let i = 0; i < reply.length; i++) {
-              lineText.textContent += reply[i];
-              await new Promise(r => setTimeout(r, 20));
-            }
+          // Add AI response with typing effect
+          const reply = data.reply;
+          const aiMessageDiv = document.createElement('div');
+          aiMessageDiv.className = 'message ai';
+          
+          const bubble = document.createElement('div');
+          bubble.className = 'message-bubble';
+          aiMessageDiv.appendChild(bubble);
+          chatMessages.appendChild(aiMessageDiv);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          
+          // Type out the response
+          for (let i = 0; i < reply.length; i++) {
+            bubble.textContent = reply.substring(0, i + 1);
+            await new Promise(r => setTimeout(r, 20));
+            chatMessages.scrollTop = chatMessages.scrollHeight;
           }
         }
       } catch (error) {
         console.error('Error:', error);
-        if (lineText) {
-          lineText.textContent = 'Sorry, I couldn\'t connect to the server. Make sure Flask is running on http://127.0.0.1:5000';
-        }
+        removeLoading();
+        addMessage('Sorry, I couldn\'t connect to the server. Make sure Flask is running on http://127.0.0.1:5000');
       } finally {
-        // Re-enable input
         chatInput.disabled = false;
         sendBtn.disabled = false;
         sendBtn.textContent = 'Send';
         chatInput.focus();
       }
     }
-
-    // Event listeners for chat input
-    if (sendBtn) {
-      sendBtn.addEventListener('click', sendChatMessage);
-    }
-    if (chatInput) {
-      chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          sendChatMessage();
-        }
-      });
-    }
+    
+    // Event listeners
+    sendBtn.addEventListener('mouseenter', playButtonHoverSound);
+    sendBtn.addEventListener('click', () => {
+      playButtonClickSound();
+      sendChatMessage();
+    });
+    
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        playButtonClickSound();
+        sendChatMessage();
+      }
+    });
+    
+    // Focus input on load
+    chatInput.focus();
+    
+    // Initialize mute state
+    window.animaleseMuted = false;
   </script>
 </body>
 </html>
