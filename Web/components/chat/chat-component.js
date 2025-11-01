@@ -352,9 +352,14 @@ export function mountChat(containerSelector, options = {}){
     // set avatars
     if(avatarLeft) avatarLeft.style.backgroundImage = `url('${base.replace(/\/$/,'')}/characters/robot.GIF')`;
     if(avatarRight) avatarRight.style.backgroundImage = `url('${base.replace(/\/$/,'')}/characters/duckFlip.GIF')`;
-    // set chat box background
+    // Chat box now uses pure CSS (no background image needed)
+    // Add cat mouth icon if not already present
     const chatBox = container.querySelector('.chat-box');
-    if(chatBox) chatBox.style.backgroundImage = `url('${base.replace(/\/$/,'')}/textBox/textBox.png')`;
+    if(chatBox && !chatBox.querySelector('.chat-box-icon')) {
+      const icon = document.createElement('div');
+      icon.className = 'chat-box-icon';
+      chatBox.appendChild(icon);
+    }
     
     // set dropdown toggle button background
     const dropdownToggle = container.querySelector('.dropdown-toggle');
@@ -373,9 +378,11 @@ export function mountChat(containerSelector, options = {}){
     // Only update size if we have actual text to measure
     // Don't preview huge box before text shows
     if (!text || text.trim() === '') {
-      // Reset to minimum size if no text
-      chatBox.style.width = '400px';
-      chatBox.style.minHeight = '350px';
+      // Reset to fixed width and minimum size if no text
+      const fixedWidth = 800;
+      const maxWidth = window.innerWidth - 60;
+      chatBox.style.width = `${Math.min(fixedWidth, maxWidth)}px`;
+      chatBox.style.minHeight = '200px';
       return;
     }
     
@@ -391,7 +398,7 @@ export function mountChat(containerSelector, options = {}){
     const tempMeasure = document.createElement('div');
     tempMeasure.style.position = 'absolute';
     tempMeasure.style.visibility = 'hidden';
-    tempMeasure.style.fontFamily = '"Doto", sans-serif';
+    tempMeasure.style.fontFamily = '"Jersey 10", sans-serif';
     tempMeasure.style.fontSize = '36px'; // Same as line-text
     tempMeasure.style.fontWeight = '400';
     tempMeasure.style.lineHeight = '1.4';
@@ -410,26 +417,19 @@ export function mountChat(containerSelector, options = {}){
     const textHeight = tempMeasure.offsetHeight;
     document.body.removeChild(tempMeasure);
     
-    // Calculate chat box width: use actual text width + padding, but ensure it fits screen
-    // TEXTBOX PADDING BREAKDOWN:
-    //   - padding-left: 50px (CSS: .chat-box padding-left)
-    //   - padding-right: 35px (CSS: .chat-box padding-right)
-    //   - gap between text and next button: 25px (CSS: .chat-box gap)
-    //   - next button space: ~80px (60px arrow width + 20px button padding)
-    //   Total horizontal padding/space: 50 + 35 + 25 + 80 = 190px
-    const calculatedWidth = Math.max(textWidth + 190, 400); // Minimum 400px
+    // Fixed width (800px from CSS), only adjust if screen is too narrow
+    const fixedWidth = 800;
     const maxWidth = window.innerWidth - 60; // Leave 30px margin on each side for safety
-    
-    chatBox.style.width = `${Math.min(calculatedWidth, maxWidth)}px`;
+    chatBox.style.width = `${Math.min(fixedWidth, maxWidth)}px`;
     
     // Calculate and set height: text height + padding + extra space for taller box
     // TEXTBOX VERTICAL PADDING BREAKDOWN:
     //   - padding-top: 10px (CSS: .chat-box padding-top)
-    //   - padding-bottom: 60px (CSS: .chat-box padding-bottom)
-    //   - extra spacing: 30px
-    //   Total vertical padding: 10 + 60 + 30 = 100px
-    const minHeight = 350; // Increased minimum height for taller textbox
-    const calculatedHeight = Math.max(textHeight + 100, minHeight);
+    //   - padding-bottom: 20px (CSS: .chat-box padding-bottom)
+    //   - extra spacing: 20px
+    //   Total vertical padding: 10 + 20 + 20 = 50px
+    const minHeight = 200; // Reduced minimum height
+    const calculatedHeight = Math.max(textHeight + 50, minHeight);
     chatBox.style.minHeight = `${calculatedHeight}px`;
     chatBox.style.height = 'auto'; // Allow natural expansion
     
@@ -482,6 +482,15 @@ export function mountChat(containerSelector, options = {}){
     // prepare current text (used for click-to-complete)
     currentStepText = step.text || '';
     showAvatar(step.speaker); hideAvatar(step.speaker==='robot'?'duck':'robot');
+    
+    // Toggle textbox flip when duck is speaking
+    if(chatBoxEl) {
+      if(step.speaker === 'duck') {
+        chatBoxEl.classList.add('duck-speaking');
+      } else {
+        chatBoxEl.classList.remove('duck-speaking');
+      }
+    }
     
     // Hide choices and overlay when starting a new step
     if(choicesEl) {
@@ -547,7 +556,7 @@ export function mountChat(containerSelector, options = {}){
     const tempContainer = document.createElement('div');
     tempContainer.style.position = 'absolute';
     tempContainer.style.visibility = 'hidden';
-    tempContainer.style.fontFamily = '"Doto", sans-serif';
+    tempContainer.style.fontFamily = '"Jersey 10", sans-serif';
     tempContainer.style.fontSize = '32px';
     tempContainer.style.fontWeight = '600';
     document.body.appendChild(tempContainer);
@@ -560,7 +569,7 @@ export function mountChat(containerSelector, options = {}){
       tempTextUnconstrained.textContent = c.text;
       tempTextUnconstrained.style.display = 'inline-block';
       tempTextUnconstrained.style.whiteSpace = 'nowrap';
-      tempTextUnconstrained.style.fontFamily = '"Doto", sans-serif';
+      tempTextUnconstrained.style.fontFamily = '"Jersey 10", sans-serif';
       tempTextUnconstrained.style.fontSize = '32px';
       tempTextUnconstrained.style.fontWeight = '600';
       tempContainer.appendChild(tempTextUnconstrained);
@@ -576,7 +585,7 @@ export function mountChat(containerSelector, options = {}){
       tempText.style.width = 'auto';
       tempText.style.wordWrap = 'break-word';
       tempText.style.whiteSpace = 'normal';
-      tempText.style.fontFamily = '"Doto", sans-serif';
+      tempText.style.fontFamily = '"Jersey 10", sans-serif';
       tempText.style.fontSize = '32px';
       tempText.style.fontWeight = '600';
       tempText.style.lineHeight = '1.4';
@@ -677,6 +686,11 @@ export function mountChat(containerSelector, options = {}){
     // Hide duck avatar before proceeding
     hideAvatar('duck');
     
+    // Remove duck-speaking class when duck finishes
+    if(chatBoxEl) {
+      chatBoxEl.classList.remove('duck-speaking');
+    }
+
     // Hide Next button
     if(btnNext) btnNext.classList.add('hidden');
     
@@ -713,6 +727,10 @@ export function mountChat(containerSelector, options = {}){
 
   async function renderInlineDuckLine(text){ 
     showAvatar('duck'); 
+    // Toggle textbox flip when duck is speaking
+    if(chatBoxEl) {
+      chatBoxEl.classList.add('duck-speaking');
+    }
     const speakerNames = options.speakerNames || {}; 
     if(speakerLabel) speakerLabel.textContent = speakerNames.duck || 'You'; 
     currentSpeaker = 'duck'; // Set speaker for Isabella-like pitch
@@ -723,7 +741,25 @@ export function mountChat(containerSelector, options = {}){
     // Don't hide avatar immediately, wait for user click
   }
 
-  async function renderStepFromInline(obj){ showAvatar(obj.speaker); const speakerNames = options.speakerNames || {}; const robotName = speakerNames.robot || 'QuackBot'; if(speakerLabel) speakerLabel.textContent = obj.speaker === 'robot' ? robotName : 'You'; currentSpeaker = obj.speaker; await typeLine(obj.text, obj.speaker); appendHistory({speaker:obj.speaker, text:obj.text}); setTimeout(()=>hideAvatar(obj.speaker),700); setTimeout(()=>renderStep(obj.then),700); }
+  async function renderStepFromInline(obj){ 
+    showAvatar(obj.speaker); 
+    // Toggle textbox flip when duck is speaking
+    if(chatBoxEl) {
+      if(obj.speaker === 'duck') {
+        chatBoxEl.classList.add('duck-speaking');
+      } else {
+        chatBoxEl.classList.remove('duck-speaking');
+      }
+    }
+    const speakerNames = options.speakerNames || {}; 
+    const robotName = speakerNames.robot || 'QuackBot'; 
+    if(speakerLabel) speakerLabel.textContent = obj.speaker === 'robot' ? robotName : 'You'; 
+    currentSpeaker = obj.speaker; 
+    await typeLine(obj.text, obj.speaker); 
+    appendHistory({speaker:obj.speaker, text:obj.text}); 
+    setTimeout(()=>hideAvatar(obj.speaker),700); 
+    setTimeout(()=>renderStep(obj.then),700); 
+  }
 
   function renderHistoryList(){ if(!historyList) return; historyList.innerHTML = ''; history.forEach(h=>{ const it = document.createElement('div'); it.className='history-item ' + (h.speaker==='robot'?'robot':'duck'); const av = document.createElement('div'); av.className='history-avatar'; av.textContent = h.speaker==='robot' ? 'R':'D'; const b = document.createElement('div'); b.className='history-bubble'; b.textContent = h.text; it.appendChild(av); it.appendChild(b); historyList.appendChild(it); }); }
 
