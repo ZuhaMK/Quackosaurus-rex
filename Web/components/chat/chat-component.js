@@ -255,20 +255,27 @@ export function mountChat(containerSelector, options = {}){
       const animalese = await loadAnimalese();
       
       // Generate and play animalese audio
-      // animalese.Animalese(text, shorten, pitch) returns a WAV data URI string
+      // animalese.Animalese(text, shorten, pitch) returns a RIFFWAVE object with dataURI property
       if (animalese && animalese.Animalese) {
         try {
           // Generate WAV: Animalese(text, shorten=false, pitch=1.0)
           const pitch = 1.0; // Default pitch
-          const wavDataUri = animalese.Animalese(text, false, pitch);
+          const wavObject = animalese.Animalese(text, false, pitch);
           
-          // Ensure we got a string (data URI), not an object
-          if (typeof wavDataUri !== 'string') {
-            console.error('Animalese did not return a string (data URI), got:', typeof wavDataUri, wavDataUri);
+          // The method returns a RIFFWAVE object, we need the dataURI property
+          let wavDataUri;
+          if (typeof wavObject === 'string') {
+            // If it's already a string, use it directly
+            wavDataUri = wavObject;
+          } else if (wavObject && wavObject.dataURI) {
+            // If it's a RIFFWAVE object, extract the dataURI
+            wavDataUri = wavObject.dataURI;
+          } else {
+            console.error('Animalese returned unexpected format:', wavObject);
             return;
           }
           
-          // Create Audio object from the WAV data
+          // Create Audio object from the WAV data URI
           const audio = new Audio();
           audio.src = wavDataUri;
           
