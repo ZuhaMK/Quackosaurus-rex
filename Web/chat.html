@@ -727,6 +727,25 @@
     document.addEventListener('click', unlockAudio, { once: true });
     document.addEventListener('keypress', unlockAudio, { once: true });
     chatInput.addEventListener('focus', unlockAudio, { once: true });
+    
+    // Debug: Test animalese after a delay
+    setTimeout(async () => {
+      console.log('=== ANIMALESE DEBUG TEST ===');
+      console.log('window.animalese:', window.animalese);
+      console.log('window.Animalese:', window.Animalese);
+      console.log('typeof window.animalese:', typeof window.animalese);
+      
+      if (window.animalese) {
+        console.log('Testing animalese function...');
+        try {
+          const testAudio = window.animalese('test');
+          console.log('Test audio created:', testAudio);
+          console.log('Test audio type:', testAudio?.constructor?.name);
+        } catch (e) {
+          console.error('Test failed:', e);
+        }
+      }
+    }, 2000);
   </script>
 </body>
 </html>
