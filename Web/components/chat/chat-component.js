@@ -24,7 +24,7 @@ export function mountChat(containerSelector, options = {}){
       <div class="dropdown-content">
         <div class="dropdown-item" data-action="go-back">Go Back to Options</div>
         <div class="dropdown-item" data-action="history">Chat History</div>
-        <div class="dropdown-item" data-action="mute">🔊 Mute Music</div>
+        <div class="dropdown-item" data-action="mute">Mute Music</div>
       </div>
     </div>
 
@@ -364,11 +364,30 @@ export function mountChat(containerSelector, options = {}){
   })();
 
   // Function to update chat box width and height based on text content
+  // Only updates when text is actually displayed, not before
   function updateChatBoxSize(text) {
     const chatBox = container.querySelector('.chat-box');
-    if (!chatBox || !text) return;
+    const lineText = container.querySelector('.line-text');
+    if (!chatBox || !lineText) return;
     
-    // Create temporary element to measure text dimensions
+    // Only update size if we have actual text to measure
+    // Don't preview huge box before text shows
+    if (!text || text.trim() === '') {
+      // Reset to minimum size if no text
+      chatBox.style.width = '400px';
+      chatBox.style.minHeight = '350px';
+      return;
+    }
+    
+    // Use the actual displayed text element for measurement
+    // This ensures we measure what's actually on screen, not a preview
+    const currentText = lineText.textContent || text;
+    if (!currentText || currentText.trim() === '') {
+      // Don't resize if text isn't actually displayed yet
+      return;
+    }
+    
+    // Create temporary element to measure text dimensions with exact styling
     const tempMeasure = document.createElement('div');
     tempMeasure.style.position = 'absolute';
     tempMeasure.style.visibility = 'hidden';
@@ -383,7 +402,7 @@ export function mountChat(containerSelector, options = {}){
     const maxTextWidth = Math.min(window.innerWidth * 0.8, 1200);
     tempMeasure.style.maxWidth = `${maxTextWidth - 140}px`; // Account for padding and button space
     tempMeasure.style.width = 'auto';
-    tempMeasure.textContent = text;
+    tempMeasure.textContent = currentText;
     document.body.appendChild(tempMeasure);
     
     // Measure the actual dimensions needed
@@ -774,13 +793,18 @@ export function mountChat(containerSelector, options = {}){
           currentAnimaleseAudio.currentTime = 0;
         }
         
+        // Control BGM
+        if(window.bgmManager){
+          window.bgmManager.setMuted(window.animaleseMuted);
+        }
+        
         // Update button text and add visual indicator
         if(window.animaleseMuted){
-          item.textContent = '🔇 Unmute Music';
+          item.textContent = 'Unmute Music';
           item.style.opacity = '0.7';
           item.style.fontWeight = '700';
         } else {
-          item.textContent = '🔊 Mute Music';
+          item.textContent = 'Mute Music';
           item.style.opacity = '1';
           item.style.fontWeight = '600';
         }
@@ -802,6 +826,13 @@ export function mountChat(containerSelector, options = {}){
       // First click: if typing, finish immediately and show full text
       if(isTyping){
         isTyping = false; // This will cause typeLine to display full text
+        
+        // Stop animalese audio immediately when skipping
+        if(currentAnimaleseAudio && !currentAnimaleseAudio.paused){
+          currentAnimaleseAudio.pause();
+          currentAnimaleseAudio.currentTime = 0;
+        }
+        
         if(lineText && currentStepText) {
           lineText.textContent = currentStepText;
         }

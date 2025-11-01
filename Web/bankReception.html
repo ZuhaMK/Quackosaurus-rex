@@ -111,7 +111,18 @@
   </div>
 
   <script type="module">
+    // Import BGM Manager
+    import './components/bgm/bgm-manager.js';
     import { mountChat } from './components/chat/chat-component.js';
+    
+    // Start BGM after page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        if (window.bgmManager) {
+          window.bgmManager.play('./assets/bgm/03 7am _ Towballs Crossing.mp3', 0.7);
+        }
+      }, 100);
+    });
 
     // Bank Reception Dialogue
     const BANK_RECEPTION_DIALOG = [
@@ -135,22 +146,12 @@
             id: 'no',
             text: 'Nah, unless you can give me some monners',
             next: 3,
-            feedback: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free monners, trust me! 🦖💸"
+            feedback: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free monners, trust me!"
           }
         ]
       },
       {
         id: 2,
-        speaker: 'robot',
-        text: "Fantastic enthusiasm! I love that energy! Let's get you on the right financial track!"
-      },
-      {
-        id: 3,
-        speaker: 'robot',
-        text: "Ha! I like your style, kid! But here's the thing - we don't give out free money... we TEACH you how to make it work for you! That's way better than free monners, trust me!"
-      },
-      {
-        id: 4,
         speaker: 'robot',
         text: "Alright, let's get you sorted! We have three amazing services that will turn your financial life around. Choose one that interests you most:"
       }

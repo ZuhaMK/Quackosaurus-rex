@@ -13,7 +13,18 @@
   <div id="savings-container" style="height:100vh"></div>
 
   <script type="module">
+    // Import BGM Manager
+    import './components/bgm/bgm-manager.js';
     import { mountChat } from './components/chat/chat-component.js';
+    
+    // Start BGM after page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        if (window.bgmManager) {
+          window.bgmManager.play('./assets/bgm/09 1pm _ Towball\'s Crossing.mp3', 0.7);
+        }
+      }, 100);
+    });
 
     // Savings & Budgeting Dialogue
     const SAVINGS_DIALOG = [

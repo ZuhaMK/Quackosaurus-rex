@@ -94,6 +94,28 @@
         </button>
     </div>
 
+    <script type="module">
+        // Import BGM Manager
+        import './components/bgm/bgm-manager.js';
+        
+        // Wait for DOM and BGM manager to be ready
+        window.addEventListener('DOMContentLoaded', () => {
+            // Wait a bit for BGM manager to initialize
+            setTimeout(() => {
+                if (window.bgmManager) {
+                    window.bgmManager.play('./assets/bgm/01 Main Theme _ Towballs Crossing.mp3', 0.7);
+                }
+            }, 100);
+        });
+        
+        // Fade out BGM when leaving page
+        window.addEventListener('beforeunload', () => {
+            if (window.bgmManager) {
+                window.bgmManager.fadeOut();
+            }
+        });
+    </script>
+    
     <script>
         // Button sound effects using Web Audio API
         let audioContext = null;
