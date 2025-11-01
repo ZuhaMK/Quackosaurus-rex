@@ -181,11 +181,23 @@ export function mountChat(containerSelector, options = {}){
       const script = document.createElement('script');
       script.src = 'https://acedio.github.io/animalese.js/animalese.js';
       script.onload = () => {
-        if (window.animalese) {
-          resolve(window.animalese);
-        } else {
-          reject(new Error('Animalese failed to load'));
-        }
+        // Wait a bit for the script to initialize window.animalese
+        const checkAnimalese = (attempts = 10) => {
+          if (window.animalese) {
+            resolve(window.animalese);
+          } else if (window.Animalese) {
+            // Try capital A variant
+            resolve(window.Animalese);
+          } else if (attempts > 0) {
+            // Wait a bit more and try again
+            setTimeout(() => checkAnimalese(attempts - 1), 100);
+          } else {
+            // Final check - log what's actually available
+            console.error('Animalese not found. Available globals:', Object.keys(window).filter(k => k.toLowerCase().includes('animal')));
+            reject(new Error('Animalese failed to load - window.animalese not found after initialization'));
+          }
+        };
+        checkAnimalese();
       };
       script.onerror = () => reject(new Error('Failed to load animalese.js'));
       document.head.appendChild(script);
