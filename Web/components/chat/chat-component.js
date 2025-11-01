@@ -98,6 +98,7 @@ export function mountChat(containerSelector, options = {}){
   let audioContext = null;
   
   function initAudioContext() {
+    // Only initialize/resume on user interaction - don't do it automatically
     if (!audioContext) {
       try {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -106,18 +107,23 @@ export function mountChat(containerSelector, options = {}){
         return null;
       }
     }
-    // Resume audio context if suspended (required for user interaction)
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
+    // Resume audio context if suspended (only call this from user interaction handlers)
+    if (audioContext && audioContext.state === 'suspended') {
+      audioContext.resume().catch(() => {
+        // Ignore resume errors - will work on next user interaction
+      });
     }
     return audioContext;
   }
   
   function playButtonHoverSound() {
     try {
-      const ctx = initAudioContext();
-      if (!ctx) return;
+      // Only play if audio context exists and is running (user has interacted)
+      if (!audioContext || audioContext.state === 'suspended') {
+        return; // Don't try to resume on hover - wait for actual user interaction
+      }
       
+      const ctx = audioContext;
       const oscillator = ctx.createOscillator();
       const gainNode = ctx.createGain();
       
@@ -249,12 +255,18 @@ export function mountChat(containerSelector, options = {}){
       const animalese = await loadAnimalese();
       
       // Generate and play animalese audio
-      // animalese.Animalese(text, shorten, pitch) returns a WAV data URI
+      // animalese.Animalese(text, shorten, pitch) returns a WAV data URI string
       if (animalese && animalese.Animalese) {
         try {
           // Generate WAV: Animalese(text, shorten=false, pitch=1.0)
           const pitch = 1.0; // Default pitch
           const wavDataUri = animalese.Animalese(text, false, pitch);
+          
+          // Ensure we got a string (data URI), not an object
+          if (typeof wavDataUri !== 'string') {
+            console.error('Animalese did not return a string (data URI), got:', typeof wavDataUri, wavDataUri);
+            return;
+          }
           
           // Create Audio object from the WAV data
           const audio = new Audio();
@@ -657,6 +669,8 @@ export function mountChat(containerSelector, options = {}){
   if(btnNext) {
     btnNext.addEventListener('mouseenter', () => playButtonHoverSound());
     btnNext.addEventListener('click', ()=>{
+      // Initialize audio context on click (user interaction)
+      initAudioContext();
       playButtonClickSound();
       if(waitingForClick && index < DIALOG.length-1){
         waitingForClick = false;
