@@ -1,0 +1,73 @@
+/* Reusable Menu Component Styles */
+.dropdown-menu {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  font-family: 'Pixelify Sans', sans-serif;
+}
+
+.dropdown-toggle {
+  background: transparent;
+  background-image: url('../assets/buttons/buttonMedium.PNG');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  color: #000;
+  padding: 12px 20px;
+  font-family: 'Pixelify Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.dropdown-toggle:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.dropdown-toggle:active {
+  transform: scale(0.98);
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #fff;
+  border-radius: 8px;
+  min-width: 220px;
+  overflow: hidden;
+  z-index: 1001;
+}
+
+.dropdown-content.show {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 15px 20px;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: 'Pixelify Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background 0.2s;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+

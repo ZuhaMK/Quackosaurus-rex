@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Marked.js for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -163,6 +165,77 @@
       border-radius: 20px;
       position: relative;
       animation: bubbleIn 0.4s ease-out;
+    }
+    
+    /* Markdown styling within message bubbles */
+    .message-bubble h1,
+    .message-bubble h2,
+    .message-bubble h3,
+    .message-bubble h4 {
+      margin: 10px 0 5px 0;
+      font-weight: 700;
+      font-family: 'Pixelify Sans', sans-serif;
+    }
+    
+    .message-bubble h1 { font-size: 1.5em; }
+    .message-bubble h2 { font-size: 1.3em; }
+    .message-bubble h3 { font-size: 1.1em; }
+    
+    .message-bubble p {
+      margin: 8px 0;
+    }
+    
+    .message-bubble ul,
+    .message-bubble ol {
+      margin: 8px 0;
+      padding-left: 25px;
+    }
+    
+    .message-bubble li {
+      margin: 4px 0;
+    }
+    
+    .message-bubble strong,
+    .message-bubble b {
+      font-weight: 700;
+    }
+    
+    .message-bubble em,
+    .message-bubble i {
+      font-style: italic;
+    }
+    
+    .message-bubble code {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+    
+    .message-bubble pre {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+    
+    .message-bubble pre code {
+      background: transparent;
+      padding: 0;
+    }
+    
+    .message-bubble blockquote {
+      border-left: 3px solid rgba(255, 255, 255, 0.5);
+      padding-left: 15px;
+      margin: 8px 0;
+      opacity: 0.9;
+    }
+    
+    .message.user .message-bubble code,
+    .message.user .message-bubble pre {
+      background: rgba(0, 0, 0, 0.1);
     }
     
     @keyframes bubbleIn {
@@ -325,7 +398,7 @@
         <button class="menu-button" id="menuButton">☰ Menu</button>
         <div class="dropdown-content" id="dropdownContent">
           <div class="dropdown-item" data-action="go-back">Go Back to Options</div>
-          <div class="dropdown-item" data-action="mute">🔊 Mute Music</div>
+          <div class="dropdown-item" data-action="mute">Mute Music</div>
         </div>
       </div>
     </div>
@@ -335,12 +408,12 @@
       <!-- Initial greeting message -->
       <div class="message ai">
         <div class="message-bubble">
-          Hi! I'm Dr. GPT, your AI Financial Consultant! 🤖<br>
+          Hi! I'm Dr. GPT, your AI Financial Consultant!<br>
           Ask me anything about finances!
         </div>
       </div>
-    </div>
-    
+            </div>
+
     <!-- Input Area -->
     <div class="chat-input-area">
       <input type="text" id="userMessageInput" placeholder="Ask me anything about finances..." />
@@ -471,7 +544,8 @@
             audio.src = wavDataUri;
             audio.volume = 0.7;
             
-            currentAnimaleseAudio = audio;
+                currentAnimaleseAudio = audio;
+                window.currentAnimaleseAudio = audio; // Global reference
             
             // Try to play - handle autoplay restrictions
             try {
@@ -605,11 +679,11 @@
           
           // Update button text and add visual indicator
           if (window.animaleseMuted) {
-            item.textContent = '🔇 Unmute Music';
+            item.textContent = 'Unmute Music';
             item.style.opacity = '0.7';
             item.style.fontWeight = '700';
           } else {
-            item.textContent = '🔊 Mute Music';
+            item.textContent = 'Mute Music';
             item.style.opacity = '1';
             item.style.fontWeight = '600';
           }
@@ -622,13 +696,44 @@
     const chatInput = document.getElementById('userMessageInput');
     const sendBtn = document.getElementById('sendMessageBtn');
     
+    // Helper function to render markdown (only for AI messages)
+    function renderMarkdown(text, isUser = false) {
+      if (isUser) {
+        // User messages stay as plain text for safety
+        return text;
+      }
+      
+      // AI messages: render markdown
+      if (typeof marked !== 'undefined') {
+        try {
+          // Configure marked for safe rendering
+          marked.setOptions({
+            breaks: true, // Convert line breaks to <br>
+            gfm: true, // GitHub Flavored Markdown
+            sanitize: false, // We trust the AI content
+          });
+          return marked.parse(text);
+        } catch (e) {
+          console.warn('Markdown rendering error:', e);
+          return text; // Fallback to plain text
+        }
+      }
+      return text; // Fallback if marked.js not loaded
+    }
+    
     function addMessage(text, isUser = false) {
       const messageDiv = document.createElement('div');
       messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
       
       const bubble = document.createElement('div');
       bubble.className = 'message-bubble';
-      bubble.textContent = text;
+      
+      // Render markdown for AI messages, plain text for user messages
+      if (isUser) {
+        bubble.textContent = text;
+      } else {
+        bubble.innerHTML = renderMarkdown(text, false);
+      }
       
       messageDiv.appendChild(bubble);
       chatMessages.appendChild(messageDiv);
@@ -707,11 +812,35 @@
           // Start playing animalese audio for the full text
           playAnimalese(reply);
           
+          // Track if typing should stop
+          let isTyping = true;
+          let shouldStopAudio = false;
+          
+          // Stop audio when user clicks on bubble
+          bubble.addEventListener('click', () => {
+            shouldStopAudio = true;
+            isTyping = false;
+            // Stop animalese audio immediately
+            if (window.currentAnimaleseAudio && !window.currentAnimaleseAudio.paused) {
+              window.currentAnimaleseAudio.pause();
+              window.currentAnimaleseAudio.currentTime = 0;
+            }
+            // Show full text immediately
+            bubble.textContent = reply;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          }, { once: true });
+          
           // Type out the response
           for (let i = 0; i < reply.length; i++) {
+            if (!isTyping) break;
             bubble.textContent = reply.substring(0, i + 1);
             await new Promise(r => setTimeout(r, 20));
             chatMessages.scrollTop = chatMessages.scrollHeight;
+          }
+          
+          // Ensure full text is shown if typing was stopped
+          if (!isTyping && bubble.textContent !== reply) {
+            bubble.textContent = reply;
           }
         }
       } catch (error) {
