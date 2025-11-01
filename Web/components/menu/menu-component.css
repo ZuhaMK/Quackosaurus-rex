@@ -15,9 +15,9 @@
   background-position: center;
   border: none;
   color: #000;
-  padding: 12px 20px;
+  padding: 18px 28px;
   font-family: 'Jersey 10', sans-serif;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 900;
   cursor: pointer;
   transition: transform 0.2s ease, filter 0.2s ease;
@@ -29,7 +29,8 @@
 }
 
 .dropdown-toggle:active {
-  transform: scale(0.98);
+  transform: scale(0.95);
+  filter: brightness(0.9);
 }
 
 .dropdown-content {
