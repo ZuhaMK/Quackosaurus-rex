@@ -217,7 +217,7 @@
     /* Input area */
     .chat-input-area {
       padding: 20px;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.95);
       border-top: 3px solid #fff;
       display: flex;
       gap: 10px;
@@ -386,7 +386,7 @@
         // Generate and play animalese audio for the text
         if (typeof animalese === 'function') {
           try {
-            // Try with pitch option first
+            // Generate audio - animalese.js returns an Audio object
             currentAnimaleseAudio = animalese(text, { pitch: 20 });
             
             // If that didn't work, try without options
@@ -394,23 +394,36 @@
               currentAnimaleseAudio = animalese(text);
             }
             
-            // Play the audio if we have it
-            if (currentAnimaleseAudio && currentAnimaleseAudio.play) {
-              const playPromise = currentAnimaleseAudio.play();
-              if (playPromise !== undefined) {
-                playPromise.catch(err => {
-                  // Audio requires user interaction - this is fine
-                  console.debug('Animalese audio requires user interaction:', err);
-                });
+            // Ensure we have an audio object
+            if (currentAnimaleseAudio) {
+              // Set volume
+              if (currentAnimaleseAudio.volume !== undefined) {
+                currentAnimaleseAudio.volume = 0.7;
               }
+              
+              // Try to play - handle autoplay restrictions
+              try {
+                const playPromise = currentAnimaleseAudio.play();
+                if (playPromise !== undefined) {
+                  await playPromise;
+                  console.log('Animalese playing successfully');
+                }
+              } catch (playError) {
+                // If autoplay is blocked, try to resume audio context
+                console.warn('Autoplay blocked, attempting to resume:', playError);
+                // User interaction required
+              }
+            } else {
+              console.warn('Animalese function did not return audio object');
             }
           } catch (err) {
-            console.warn('Error generating animalese audio:', err);
+            console.error('Error generating animalese audio:', err);
           }
+        } else {
+          console.warn('Animalese is not a function:', typeof animalese);
         }
       } catch (error) {
-        // Graceful degradation - if animalese fails, chat still works
-        console.debug('Animalese audio error (continuing without audio):', error);
+        console.error('Animalese audio error:', error);
       }
     }
     
@@ -610,12 +623,16 @@
     sendBtn.addEventListener('mouseenter', playButtonHoverSound);
     sendBtn.addEventListener('click', () => {
       playButtonClickSound();
+      // Unlock audio context on user interaction
+      initAudioContext();
       sendChatMessage();
     });
     
     chatInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         playButtonClickSound();
+        // Unlock audio context on user interaction
+        initAudioContext();
         sendChatMessage();
       }
     });
