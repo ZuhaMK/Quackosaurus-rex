@@ -47,13 +47,17 @@
             font-size: 1.8rem;
             font-weight: 700;
             padding: 1.2rem 3rem;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
+            background: transparent;
+            background-image: url('assets/buttons/buttonLong.PNG');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            color: #000;
             border: none;
-            border-radius: 50px;
+            border-radius: 0;
             cursor: pointer;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            transition: all 0.3s ease;
+            box-shadow: none;
+            transition: transform 0.2s ease, filter 0.2s ease;
             animation: slideUp 1s ease-out 0.3s both;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -64,8 +68,7 @@
         }
         .enter-button:hover {
             transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.6);
-            background: linear-gradient(135deg, #45a049, #4CAF50);
+            filter: brightness(1.1);
         }
         .enter-button:active {
             transform: translateY(-2px) scale(1.02);
@@ -84,7 +87,7 @@
 </head>
 <body>
     <div class="landing-container">
-        <h1 class="title">🦆 Quackosaurus-rex:<br>Your Financial Adventure Awaits!</h1>
+        <h1 class="title">Quackosaurus-rex:<br>Your Financial Adventure Awaits!</h1>
         <button class="enter-button" onclick="window.location.href='bankReception.html'">
             Enter the Bank
         </button>
