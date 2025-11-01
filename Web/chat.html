@@ -353,28 +353,28 @@
         script.src = 'https://acedio.github.io/animalese.js/animalese.js';
         script.onload = () => {
           console.log('Script loaded, checking window.animalese...');
-          // Check immediately (same as chat-component.js)
-          if (window.animalese) {
-            console.log('Animalese loaded successfully:', typeof window.animalese);
-            resolve(window.animalese);
-          } else {
-            console.error('window.animalese is undefined after script load');
-            // Try alternative: maybe it's Animalese (capital A)
-            if (window.Animalese) {
+          // Wait for the script to initialize window.animalese (may need multiple attempts)
+          const checkAnimalese = (attempts = 10) => {
+            if (window.animalese) {
+              console.log('Animalese loaded successfully:', typeof window.animalese);
+              resolve(window.animalese);
+            } else if (window.Animalese) {
               console.log('Found Animalese (capital A)');
               resolve(window.Animalese);
-            } else {
-              // Give it a tiny delay and check again
+            } else if (attempts > 0) {
+              // Wait a bit more and try again
               setTimeout(() => {
-                if (window.animalese) {
-                  console.log('Animalese loaded after delay');
-                  resolve(window.animalese);
-                } else {
-                  reject(new Error('Animalese failed to load - window.animalese not found'));
-                }
-              }, 50);
+                console.log(`Checking again... (${10 - attempts + 1}/10)`);
+                checkAnimalese(attempts - 1);
+              }, 100);
+            } else {
+              // Final check - log what's available
+              console.error('Animalese not found after all attempts');
+              console.error('Available globals:', Object.keys(window).filter(k => k.toLowerCase().includes('animal')));
+              reject(new Error('Animalese failed to load - window.animalese not found after initialization'));
             }
-          }
+          };
+          checkAnimalese();
         };
         script.onerror = (err) => {
           console.error('Failed to load animalese.js script:', err);
